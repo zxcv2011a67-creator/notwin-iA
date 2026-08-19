@@ -1,5 +1,17 @@
 {
-  "appId": "com.notwin.ia",
-  "appName": "notwin iA",
-  "webDir": "."
+  "name": "notwin-ia",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "mkdir -p www && cp index.html www/index.html"
+  },
+  "dependencies": {
+    "@capacitor/core": "6.2.1",
+    "@capacitor/android": "6.2.1",
+    "express": "^4.21.2",
+    "@google/generative-ai": "^0.24.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "6.2.1"
+  }
 }
