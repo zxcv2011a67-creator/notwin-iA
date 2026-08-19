@@ -1,430 +1,487 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>notwin iA</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>notwin iA</title>
 
-<style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-}
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
 
-body {
-  background: #09090f;
-  color: #fff;
-  min-height: 100vh;
-}
+    body {
+      background: #09090f;
+      color: #fff;
+      min-height: 100vh;
+    }
 
-.app {
-  max-width: 600px;
-  margin: auto;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  padding: 15px;
-}
+    .app {
+      max-width: 600px;
+      margin: auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 15px;
+    }
 
-/* Header */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 5px 20px;
-}
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 5px 20px;
+    }
 
-.logo {
-  font-size: 27px;
-  font-weight: bold;
-}
+    .logo {
+      font-size: 27px;
+      font-weight: bold;
+    }
 
-.logo span {
-  color: #9b6cff;
-}
+    .logo span {
+      color: #9b6cff;
+    }
 
-.menu,
-.profile {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  background: #171722;
-  border: 1px solid #292938;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 21px;
-}
+    .menu,
+    .profile {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: #171722;
+      border: 1px solid #292938;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 21px;
+    }
 
-.subtitle {
-  text-align: center;
-  color: #aaa;
-  font-size: 13px;
-  margin-top: -15px;
-  margin-bottom: 20px;
-}
+    .subtitle {
+      text-align: center;
+      color: #aaa;
+      font-size: 13px;
+      margin-top: -15px;
+      margin-bottom: 20px;
+    }
 
-/* Welcome */
-.welcome {
-  background: linear-gradient(145deg, #171522, #101017);
-  border: 1px solid #29263a;
-  border-radius: 25px;
-  padding: 25px 20px;
-  margin-bottom: 20px;
-  text-align: center;
-}
+    .welcome {
+      background: linear-gradient(145deg, #171522, #101017);
+      border: 1px solid #29263a;
+      border-radius: 25px;
+      padding: 25px 20px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
 
-.orb {
-  width: 75px;
-  height: 75px;
-  margin: 0 auto 15px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #c3a5ff, #7040d9 50%, #27134f);
-  box-shadow: 0 0 35px #7544e866;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 34px;
-}
+    .orb {
+      width: 75px;
+      height: 75px;
+      margin: 0 auto 15px;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle at 35% 30%,
+        #c3a5ff,
+        #7040d9 50%,
+        #27134f
+      );
+      box-shadow: 0 0 35px #7544e866;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+    }
 
-.welcome h1 {
-  font-size: 21px;
-  margin-bottom: 10px;
-}
+    .welcome h1 {
+      font-size: 21px;
+      margin-bottom: 10px;
+    }
 
-.welcome h1 span {
-  color: #9b6cff;
-}
+    .welcome h1 span {
+      color: #9b6cff;
+    }
 
-.welcome p {
-  color: #aaa;
-  line-height: 1.8;
-  font-size: 14px;
-}
+    .welcome p {
+      color: #aaa;
+      line-height: 1.8;
+      font-size: 14px;
+    }
 
-/* Chat */
-.chat {
-  flex: 1;
-  padding-bottom: 15px;
-}
+    .chat {
+      flex: 1;
+      padding-bottom: 15px;
+    }
 
-.message {
-  max-width: 85%;
-  padding: 15px 17px;
-  margin: 12px 0;
-  border-radius: 20px;
-  line-height: 1.8;
-  font-size: 15px;
-}
+    .message {
+      max-width: 85%;
+      padding: 15px 17px;
+      margin: 12px 0;
+      border-radius: 20px;
+      line-height: 1.8;
+      font-size: 15px;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
 
-.ai {
-  background: #171721;
-  border: 1px solid #292938;
-  margin-left: auto;
-  margin-right: 0;
-}
+    .ai {
+      background: #171721;
+      border: 1px solid #292938;
+      margin-left: auto;
+      margin-right: 0;
+    }
 
-.user {
-  background: linear-gradient(135deg, #7345dc, #915df4);
-  margin-right: auto;
-  margin-left: 0;
-}
+    .user {
+      background: linear-gradient(135deg, #7345dc, #915df4);
+      margin-right: auto;
+      margin-left: 0;
+    }
 
-.time {
-  display: block;
-  font-size: 10px;
-  opacity: .55;
-  margin-top: 7px;
-}
+    .time {
+      display: block;
+      font-size: 10px;
+      opacity: .55;
+      margin-top: 7px;
+    }
 
-/* Input */
-.input-area {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #14141d;
-  border: 1px solid #302e40;
-  padding: 8px;
-  border-radius: 28px;
-  margin-bottom: 14px;
-}
+    .input-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #14141d;
+      border: 1px solid #302e40;
+      padding: 8px;
+      border-radius: 28px;
+      margin-bottom: 14px;
+    }
 
-.input-area button {
-  border: none;
-  width: 43px;
-  height: 43px;
-  border-radius: 50%;
-  background: #20202c;
-  color: #a87cff;
-  font-size: 20px;
-}
+    .input-area button {
+      border: none;
+      width: 43px;
+      height: 43px;
+      border-radius: 50%;
+      background: #20202c;
+      color: #a87cff;
+      font-size: 20px;
+      cursor: pointer;
+    }
 
-.input-area input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: white;
-  font-size: 15px;
-  text-align: right;
-}
+    .input-area input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: white;
+      font-size: 15px;
+      text-align: right;
+    }
 
-.send {
-  background: linear-gradient(135deg, #7545df) !important;
-  color: white !important;
-}
+    .input-area input::placeholder {
+      color: #777;
+    }
 
-/* Navigation */
-.nav {
-  display: flex;
-  justify-content: space-around;
-  background: #12121a;
-  border: 1px solid #292936;
-  border-radius: 25px;
-  padding: 12px 5px;
-}
+    .send {
+      background: linear-gradient(135deg, #7545df) !important;
+      color: white !important;
+    }
 
-.nav-item {
-  color: #888;
-  text-align: center;
-  font-size: 11px;
-}
+    .send:disabled {
+      opacity: .5;
+    }
 
-.nav-item.active {
-  color: #a878ff;
-}
+    .nav {
+      display: flex;
+      justify-content: space-around;
+      background: #12121a;
+      border: 1px solid #292936;
+      border-radius: 25px;
+      padding: 12px 5px;
+    }
 
-.nav-icon {
-  display: block;
-  font-size: 21px;
-  margin-bottom: 4px;
-}
+    .nav-item {
+      color: #888;
+      text-align: center;
+      font-size: 11px;
+    }
 
-.typing {
-  display: none;
-  color: #999;
-  font-size: 13px;
-  padding: 8px;
-}
-</style>
+    .nav-item.active {
+      color: #a878ff;
+    }
+
+    .nav-icon {
+      display: block;
+      font-size: 21px;
+      margin-bottom: 4px;
+    }
+
+    .typing {
+      display: none;
+      color: #999;
+      font-size: 13px;
+      padding: 8px;
+    }
+
+    .error {
+      color: #ff8b8b;
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="app">
+  <div class="app">
 
-  <div class="header">
-    <div class="menu">☰</div>
+    <div class="header">
 
-    <div class="logo">
-      notwin <span>iA</span>
+      <div class="menu">
+        ☰
+      </div>
+
+      <div class="logo">
+        notwin <span>iA</span>
+      </div>
+
+      <div class="profile">
+        ◉
+      </div>
+
     </div>
 
-    <div class="profile">◉</div>
-  </div>
+    <div class="subtitle">
+      مساعدك الذكي
+    </div>
 
-  <div class="subtitle">
-    مساعدك الذكي
-  </div>
+    <div class="welcome">
 
-  <div class="welcome">
-    <div class="orb">✦</div>
+      <div class="orb">
+        ✦
+      </div>
 
-    <h1>
-      مرحباً بك في <span>notwin iA</span>
-    </h1>
+      <h1>
+        مرحباً بك في <span>notwin iA</span>
+      </h1>
 
-    <p>
-      ذكاء اصطناعي يساعدك في البرمجة،
-      الكتابة، التعلم، والأفكار وأكثر.
-    </p>
-  </div>
+      <p>
+        ذكاء اصطناعي يساعدك في البرمجة،
+        الكتابة، التعلم، والأفكار وأكثر.
+      </p>
 
-  <div class="chat" id="chat">
+    </div>
 
-    <div class="message ai">
-      سلام 👋<br>
-      كيفاش نقدر نعاونك اليوم؟
-      <span class="time">الآن</span>
+    <div class="chat" id="chat">
+
+      <div class="message ai">
+
+        سلام 👋<br>
+        كيفاش نقدر نعاونك اليوم؟
+
+        <span class="time">
+          الآن
+        </span>
+
+      </div>
+
+    </div>
+
+    <div class="typing" id="typing">
+      notwin iA يكتب...
+    </div>
+
+    <div class="input-area">
+
+      <button
+        type="button"
+        onclick="alert('رفع الملفات نضيفوه في المرحلة القادمة')">
+        📎
+      </button>
+
+      <input
+        id="messageInput"
+        type="text"
+        placeholder="اكتب رسالتك..."
+        autocomplete="off">
+
+      <button
+        id="sendButton"
+        class="send"
+        type="button"
+        onclick="sendMessage()">
+        ➤
+      </button>
+
+    </div>
+
+    <div class="nav">
+
+      <div class="nav-item active">
+        <span class="nav-icon">💬</span>
+        الدردشة
+      </div>
+
+      <div class="nav-item">
+        <span class="nav-icon">🗨</span>
+        المحادثات
+      </div>
+
+      <div class="nav-item">
+        <span class="nav-icon">☆</span>
+        المفضلة
+      </div>
+
+      <div class="nav-item">
+        <span class="nav-icon">⌘</span>
+        الأدوات
+      </div>
+
     </div>
 
   </div>
 
-  <div class="typing" id="typing">
-    notwin iA يكتب...
-  </div>
+  <script>
 
-  <div class="input-area">
+    // رابط السيرفر الحالي
+    const API_URL = "https://notwin-ia-1.onrender.com/chat";
 
-    <button onclick="alert('رفع الملفات نضيفوه في المرحلة القادمة')">
-      📎
-    </button>
+    const input = document.getElementById("messageInput");
+    const chat = document.getElementById("chat");
+    const typing = document.getElementById("typing");
+    const sendButton = document.getElementById("sendButton");
 
-    <input
-      id="messageInput"
-      type="text"
-      placeholder="اكتب رسالتك..."
-      onkeydown="handleKey(event)"
-    >
+    input.addEventListener("keydown", function(event) {
 
-    <button class="send" onclick="sendMessage()">
-      ➤
-    </button>
+      if (event.key === "Enter") {
 
-  </div>
+        event.preventDefault();
 
-  <div class="nav">
+        sendMessage();
 
-    <div class="nav-item active">
-      <span class="nav-icon">💬</span>
-      الدردشة
-    </div>
+      }
 
-    <div class="nav-item">
-      <span class="nav-icon">🗨</span>
-      المحادثات
-    </div>
-
-    <div class="nav-item">
-      <span class="nav-icon">☆</span>
-      المفضلة
-    </div>
-
-    <div class="nav-item">
-      <span class="nav-icon">⌘</span>
-      الأدوات
-    </div>
-
-  </div>
-
-</div>
-
-<script>
-
-function handleKey(event) {
-  if (event.key === "Enter") {
-    sendMessage();
-  }
-}
-
-function sendMessage() {
-
-  const input = document.getElementById("messageInput");
-  const chat = document.getElementById("chat");
-  const typing = document.getElementById("typing");
-
-  const text = input.value.trim();
-
-  if (!text) return;
-
-  const userMessage = document.createElement("div");
-
-  userMessage.className = "message user";
-
-  userMessage.innerHTML =
-    text +
-    '<span class="time">الآن ✓✓</span>';
-
-  chat.appendChild(userMessage);
-
-  input.value = "";
-
-  typing.style.display = "block";
-
-  setTimeout(() => {
-
-    typing.style.display = "none";
-
-    const aiMessage = document.createElement("div");
-
-    aiMessage.className = "message ai";
-
-    aiMessage.innerHTML =
-      "وصلتني رسالتك 👌<br>" +
-      "أنا notwin iA، والربط الحقيقي مع Gemini راح نفعّلوه في الخطوة الجاية. 🔥" +
-      '<span class="time">الآن</span>';
-
-    chat.appendChild(aiMessage);
-
-    window.scrollTo({
-      top: document.body.scrollHeight,
-      behavior: "smooth"
     });
 
-  }, 900);
-}
+    function addMessage(text, type) {
 
-</script>
-<script>
-const API_URL = "https://notwin-ia.onrender.com/chat";
+      const message = document.createElement("div");
 
-function handleKey(event) {
-  if (event.key === "Enter") {
-    sendMessage();
-  }
-}
+      message.className = "message " + type;
 
-async function sendMessage() {
-  const input = document.getElementById("messageInput");
-  const chat = document.getElementById("chat");
-  const typing = document.getElementById("typing");
+      const content = document.createElement("div");
 
-  const text = input.value.trim();
+      content.textContent = text;
 
-  if (!text) return;
+      const time = document.createElement("span");
 
-  const userMessage = document.createElement("div");
-  userMessage.className = "message user";
-  userMessage.innerHTML =
-    text + '<span class="time">الآن ✓✓</span>';
+      time.className = "time";
 
-  chat.appendChild(userMessage);
-  input.value = "";
-  typing.style.display = "block";
+      time.textContent = "الآن";
 
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: text
-      })
-    });
+      message.appendChild(content);
 
-    const data = await response.json();
+      message.appendChild(time);
 
-    typing.style.display = "none";
+      chat.appendChild(message);
 
-    const aiMessage = document.createElement("div");
-    aiMessage.className = "message ai";
+      message.scrollIntoView({
+        behavior: "smooth",
+        block: "end"
+      });
 
-    aiMessage.innerHTML = data.reply
-      ? data.reply.replace(/\n/g, "<br>")
-      : "ما قدرتش نجيب الرد 😕";
+    }
 
-    chat.appendChild(aiMessage);
+    async function sendMessage() {
 
-  } catch (error) {
-    typing.style.display = "none";
+      const text = input.value.trim();
 
-    const aiMessage = document.createElement("div");
-    aiMessage.className = "message ai";
+      if (!text) {
+        return;
+      }
 
-    aiMessage.innerHTML =
-      "صار خطأ في الاتصال بالسيرفر 😕";
+      addMessage(text, "user");
 
-    chat.appendChild(aiMessage);
+      input.value = "";
 
-    console.error(error);
-  }
+      input.disabled = true;
 
-  window.scrollTo({
-    top: document.body.scrollHeight,
-    behavior: "smooth"
-  });
-}
-</script>
+      sendButton.disabled = true;
+
+      typing.style.display = "block";
+
+      try {
+
+        const response = await fetch(API_URL, {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            message: text
+          })
+
+        });
+
+        let data;
+
+        try {
+
+          data = await response.json();
+
+        } catch {
+
+          throw new Error("السيرفر رجع رد غير صالح");
+
+        }
+
+        if (!response.ok) {
+
+          throw new Error(
+            data.error || "حدث خطأ في السيرفر"
+          );
+
+        }
+
+        typing.style.display = "none";
+
+        if (data.reply) {
+
+          addMessage(data.reply, "ai");
+
+        } else {
+
+          addMessage(
+            "ما قدرتش نجيب الرد 😕",
+            "ai"
+          );
+
+        }
+
+      } catch (error) {
+
+        console.error(error);
+
+        typing.style.display = "none";
+
+        addMessage(
+          "صار خطأ في الاتصال بالسيرفر 😕",
+          "ai"
+        );
+
+      } finally {
+
+        input.disabled = false;
+
+        sendButton.disabled = false;
+
+        input.focus();
+
+      }
+
+    }
+
+  </script>
+
+</body>
+
+  </html>
