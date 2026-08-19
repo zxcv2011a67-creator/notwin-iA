@@ -5,13 +5,13 @@ const app = express();
 
 app.use(express.json({ limit: "10mb" }));
 
-// السماح للتطبيق بالاتصال بالسيرفر
+// ===============================
+// CORS
+// ===============================
+
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Content-Type"
-  );
+  res.header("Access-Control-Allow-Headers", "Content-Type");
   res.header(
     "Access-Control-Allow-Methods",
     "GET, POST, OPTIONS"
@@ -24,18 +24,30 @@ app.use((req, res, next) => {
   next();
 });
 
-const apiKey =
-  process.env.GEMINI_API_KEY;
+
+// ===============================
+// Gemini
+// ===============================
+
+const apiKey = process.env.GEMINI_API_KEY;
 
 if (!apiKey) {
-  console.error(
-    "GEMINI_API_KEY is missing"
-  );
+  console.error("GEMINI_API_KEY is missing");
 }
 
 const genAI = apiKey
   ? new GoogleGenerativeAI(apiKey)
   : null;
+
+
+// ===============================
+// إعدادات النماذج
+// ===============================
+
+const CHAT_MODEL = "gemini-3.6-flash";
+
+// Nano Banana 2
+const IMAGE_MODEL = "gemini-3.1-flash-image-preview";
 
 
 // ===============================
@@ -52,35 +64,63 @@ const SYSTEM_PROMPT = `
 "شكون مطورك؟"
 أو:
 "من مطورك؟"
-أو أي سؤال مشابه عن المطور، أجب:
+أو:
+"من صنعك؟"
+أو أي سؤال مشابه عن المطور:
 
+أجب حرفياً:
 "مطوري هو إبراهيم محور الكون 👑🌍🔥💚"
 
 إذا سألك:
 "شكون نتا؟"
-أجب أنك notwin iA.
+أجب:
+"أنا notwin iA 🤖💚"
 
-جاوب بلغة المستخدم.
+جاوب دائماً بلغة المستخدم.
 
 إذا كان المستخدم يهدر بالدزيرية،
 جاوب بالدزيرية بشكل طبيعي.
 
-كن منطقيًا وواضحًا ومختصرًا عندما يكون السؤال بسيطًا.
+كن واضحاً ومفيداً.
 
-إذا لم تعرف الإجابة، قل ذلك بصراحة ولا تخترع معلومات.
+إذا لم تعرف الإجابة، قل ذلك بصراحة.
+لا تخترع معلومات.
+
+لا تدّعي أنك شخص حقيقي.
 `;
+
+
+// ===============================
+// أدوات مساعدة
+// ===============================
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isTemporaryError(error) {
+  return (
+    error?.status === 500 ||
+    error?.status === 502 ||
+    error?.status === 503 ||
+    error?.status === 504
+  );
+}
 
 
 // ===============================
 // CHAT
 // ===============================
 
-async function createStream(message) {
+async function createChatStream(message) {
 
-  const model =
-    genAI.getGenerativeModel({
-      model: "gemini-3.6-flash"
-    });
+  if (!genAI) {
+    throw new Error("GEMINI_API_KEY_MISSING");
+  }
+
+  const model = genAI.getGenerativeModel({
+    model: CHAT_MODEL
+  });
 
   const result =
     await model.generateContentStream(
@@ -91,31 +131,6 @@ ${message}`
     );
 
   return result.stream;
-}
-
-
-// ===============================
-// أخطاء مؤقتة
-// ===============================
-
-function isTemporaryError(error) {
-
-  return (
-    error?.status === 429 ||
-    error?.status === 500 ||
-    error?.status === 502 ||
-    error?.status === 503 ||
-    error?.status === 504
-  );
-}
-
-
-function wait(ms) {
-
-  return new Promise(
-    resolve => setTimeout(resolve, ms)
-  );
-
 }
 
 
@@ -146,7 +161,9 @@ app.get("/health", (req, res) => {
     gemini:
       apiKey
         ? "configured"
-        : "missing"
+        : "missing",
+    chatModel: CHAT_MODEL,
+    imageModel: IMAGE_MODEL
   });
 
 });
@@ -187,18 +204,18 @@ app.post("/chat", async (req, res) => {
   try {
 
     stream =
-      await createStream(
+      await createChatStream(
         message.trim()
       );
 
   } catch (error) {
 
     console.error(
-      "Gemini attempt 1:",
+      "Chat attempt 1:",
       error?.message
     );
 
-    // الحد اليومي
+    // الحد المجاني
     if (error?.status === 429) {
 
       return res.status(429).json({
@@ -212,7 +229,7 @@ app.post("/chat", async (req, res) => {
 
       return res.status(500).json({
         error:
-          "تعذر الاتصال بـ Gemini حالياً."
+          "تعذر الاتصال بـ Gemini حالياً 😕"
       });
 
     }
@@ -222,14 +239,14 @@ app.post("/chat", async (req, res) => {
     try {
 
       stream =
-        await createStream(
+        await createChatStream(
           message.trim()
         );
 
     } catch (error2) {
 
       console.error(
-        "Gemini attempt 2:",
+        "Chat attempt 2:",
         error2?.message
       );
 
@@ -250,6 +267,11 @@ app.post("/chat", async (req, res) => {
     }
 
   }
+
+
+  // ===============================
+  // Streaming
+  // ===============================
 
   try {
 
@@ -278,9 +300,7 @@ app.post("/chat", async (req, res) => {
         chunk.text();
 
       if (text) {
-
         res.write(text);
-
       }
 
     }
@@ -290,7 +310,7 @@ app.post("/chat", async (req, res) => {
   } catch (error) {
 
     console.error(
-      "Streaming error:",
+      "Chat streaming error:",
       error
     );
 
@@ -298,7 +318,7 @@ app.post("/chat", async (req, res) => {
 
       return res.status(500).json({
         error:
-          "صار خطأ أثناء استقبال الرد."
+          "صار خطأ أثناء استقبال الرد 😕"
       });
 
     }
@@ -312,7 +332,7 @@ app.post("/chat", async (req, res) => {
 
 // ===============================
 // توليد الصور
-// Nano Banana 2 Lite
+// Nano Banana 2
 // ===============================
 
 app.post(
@@ -323,7 +343,7 @@ app.post(
 
       return res.status(500).json({
         error:
-          "مفتاح Gemini غير موجود."
+          "مفتاح Gemini غير موجود في السيرفر."
       });
 
     }
@@ -343,19 +363,18 @@ app.post(
 
     }
 
+
     try {
 
       const response =
         await fetch(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-image:generateContent",
+          `https://generativelanguage.googleapis.com/v1beta/models/${IMAGE_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`,
           {
             method: "POST",
 
             headers: {
               "Content-Type":
-                "application/json",
-              "x-goog-api-key":
-                apiKey
+                "application/json"
             },
 
             body: JSON.stringify({
@@ -372,8 +391,11 @@ app.post(
               ],
 
               generationConfig: {
-                responseModalities:
-                  ["IMAGE"]
+
+                responseModalities: [
+                  "IMAGE"
+                ]
+
               }
 
             })
@@ -382,18 +404,42 @@ app.post(
         );
 
 
-      // الحد اليومي
-      if (
-        response.status === 429
-      ) {
+      // ===============================
+      // Rate limit
+      // ===============================
+
+      if (response.status === 429) {
 
         return res.status(429).json({
           error:
-            "وصلت للحد الأقصى المجاني لتوليد الصور اليوم 😴💕"
+            "وصلت للحد المجاني لتوليد الصور اليوم 😴💕"
         });
 
       }
 
+
+      // ===============================
+      // Server errors
+      // ===============================
+
+      if (
+        response.status === 500 ||
+        response.status === 502 ||
+        response.status === 503 ||
+        response.status === 504
+      ) {
+
+        return res.status(503).json({
+          error:
+            "خدمة توليد الصور مشغولة حالياً، عاود بعد شوية 😕"
+        });
+
+      }
+
+
+      // ===============================
+      // أي خطأ آخر
+      // ===============================
 
       if (!response.ok) {
 
@@ -409,35 +455,41 @@ app.post(
           errorData
         );
 
-        return res.status(
-          response.status
-        ).json({
-
+        return res.status(500).json({
           error:
-            "ما قدرناش نولد الصورة حالياً. عاود المحاولة بعد شوية."
-
+            "ما قدرناش نولد الصورة حالياً."
         });
 
       }
 
+
+      // ===============================
+      // قراءة النتيجة
+      // ===============================
 
       const data =
         await response.json();
 
 
       const parts =
-        data?.candidates?.[0]?.content?.parts || [];
+        data?.candidates?.[0]
+          ?.content?.parts || [];
 
 
       const imagePart =
         parts.find(
           part =>
-            part.inlineData ||
-            part.inline_data
+            part?.inlineData ||
+            part?.inline_data
         );
 
 
       if (!imagePart) {
+
+        console.error(
+          "No image part:",
+          JSON.stringify(data)
+        );
 
         return res.status(500).json({
           error:
@@ -452,6 +504,16 @@ app.post(
         imagePart.inline_data;
 
 
+      if (!imageData?.data) {
+
+        return res.status(500).json({
+          error:
+            "بيانات الصورة ناقصة."
+        });
+
+      }
+
+
       return res.json({
 
         success: true,
@@ -459,12 +521,13 @@ app.post(
         mimeType:
           imageData.mimeType ||
           imageData.mime_type ||
-          "image/png",
+          "image/jpeg",
 
         image:
           imageData.data
 
       });
+
 
     } catch (error) {
 
