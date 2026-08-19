@@ -4,11 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>notwin iA</title>
 
   <style>
-
     * {
       box-sizing: border-box;
       margin: 0;
@@ -50,6 +48,10 @@
       color: #19d66b;
     }
 
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
+
     .icon-btn {
       width: 40px;
       height: 40px;
@@ -61,8 +63,8 @@
       cursor: pointer;
     }
 
-    .icon-btn:hover {
-      background: #171d19;
+    .icon-btn:active {
+      background: #202722;
     }
 
     .chat {
@@ -85,7 +87,7 @@
       align-items: center;
       justify-content: center;
       font-size: 30px;
-      box-shadow: 0 0 35px rgba(25,214,107,.25);
+      box-shadow: 0 0 35px rgba(25, 214, 107, .25);
     }
 
     .welcome h1 {
@@ -163,7 +165,7 @@
       bottom: 0;
       left: 50%;
       transform: translateX(-50%);
-      width: min(700px,100%);
+      width: min(700px, 100%);
       padding: 12px 14px 18px;
       background: linear-gradient(
         transparent,
@@ -191,6 +193,7 @@
       font-size: 15px;
       padding: 11px 5px;
       text-align: right;
+      min-width: 0;
     }
 
     .input-area input::placeholder {
@@ -213,6 +216,10 @@
       font-size: 20px;
     }
 
+    .send:active {
+      transform: scale(.94);
+    }
+
     .attach {
       background: transparent;
       color: #9aa49e;
@@ -221,6 +228,11 @@
 
     .send:disabled {
       opacity: .45;
+      cursor: default;
+    }
+
+    .attach:active {
+      background: #202722;
     }
 
     /* القائمة */
@@ -294,9 +306,10 @@
       background: transparent;
       color: #777;
       cursor: pointer;
+      font-size: 16px;
     }
 
-    .delete-chat:hover {
+    .delete-chat:active {
       color: #ff5555;
     }
 
@@ -311,7 +324,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,.55);
+      background: rgba(0, 0, 0, .55);
       z-index: 90;
     }
 
@@ -319,7 +332,7 @@
       display: block;
     }
 
-    /* نافذة الصور */
+    /* الصور */
 
     .image-panel {
       display: none;
@@ -327,13 +340,13 @@
       bottom: 82px;
       left: 50%;
       transform: translateX(-50%);
-      width: min(500px,92%);
+      width: min(500px, 92%);
       background: #171c19;
       border: 1px solid #303a33;
       border-radius: 18px;
       padding: 15px;
       z-index: 30;
-      box-shadow: 0 10px 40px rgba(0,0,0,.5);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
     }
 
     .image-panel.show {
@@ -367,8 +380,11 @@
       cursor: pointer;
     }
 
-    @media(max-width:600px) {
+    .generate-button:disabled {
+      opacity: .5;
+    }
 
+    @media(max-width:600px) {
       .chat {
         padding-left: 10px;
         padding-right: 10px;
@@ -377,9 +393,7 @@
       .sidebar {
         width: 285px;
       }
-
     }
-
   </style>
 </head>
 
@@ -391,7 +405,8 @@
 
     <button
       id="menuButton"
-      class="icon-btn">
+      class="icon-btn"
+      type="button">
       ☰
     </button>
 
@@ -400,12 +415,12 @@
     </div>
 
     <button
-      class="icon-btn">
+      class="icon-btn"
+      type="button">
       ◉
     </button>
 
   </header>
-
 
   <main
     id="chat"
@@ -415,9 +430,7 @@
       id="welcome"
       class="welcome">
 
-      <div class="orb">
-        ✦
-      </div>
+      <div class="orb">✦</div>
 
       <h1>
         مرحباً بك في
@@ -432,15 +445,11 @@
 
   </main>
 
-
   <div
     id="typing"
     class="typing">
-
     notwin iA يكتب...
-
   </div>
-
 
   <div class="input-wrapper">
 
@@ -492,7 +501,8 @@
 
     <button
       id="closeMenu"
-      class="icon-btn">
+      class="icon-btn"
+      type="button">
       ×
     </button>
 
@@ -500,15 +510,12 @@
 
   <button
     id="newChatButton"
-    class="new-chat">
-
+    class="new-chat"
+    type="button">
     ＋ محادثة جديدة
-
   </button>
 
-  <div
-    id="conversationList">
-  </div>
+  <div id="conversationList"></div>
 
 </aside>
 
@@ -530,10 +537,9 @@
 
   <button
     id="generateButton"
-    class="generate-button">
-
+    class="generate-button"
+    type="button">
     ✨ توليد الصورة
-
   </button>
 
 </div>
@@ -541,107 +547,150 @@
 
 <script>
 
+"use strict";
+
+
+/* =========================
+   إعداد السيرفر
+========================= */
+
 const API_URL =
   "https://notwin-ia-1.onrender.com";
 
+
+/* =========================
+   عناصر الصفحة
+========================= */
+
 const input =
-  document.getElementById(
-    "messageInput"
-  );
+  document.getElementById("messageInput");
 
 const chat =
-  document.getElementById(
-    "chat"
-  );
+  document.getElementById("chat");
 
 const typing =
-  document.getElementById(
-    "typing"
-  );
+  document.getElementById("typing");
 
 const sendButton =
-  document.getElementById(
-    "sendButton"
-  );
+  document.getElementById("sendButton");
 
 const sidebar =
-  document.getElementById(
-    "sidebar"
-  );
+  document.getElementById("sidebar");
 
 const overlay =
-  document.getElementById(
-    "overlay"
-  );
+  document.getElementById("overlay");
 
 const conversationList =
-  document.getElementById(
-    "conversationList"
-  );
+  document.getElementById("conversationList");
 
 const imagePanel =
-  document.getElementById(
-    "imagePanel"
-  );
+  document.getElementById("imagePanel");
 
 const imagePrompt =
-  document.getElementById(
-    "imagePrompt"
-  );
+  document.getElementById("imagePrompt");
 
 const generateButton =
-  document.getElementById(
-    "generateButton"
+  document.getElementById("generateButton");
+
+const imageButton =
+  document.getElementById("imageButton");
+
+const menuButton =
+  document.getElementById("menuButton");
+
+const closeMenu =
+  document.getElementById("closeMenu");
+
+const newChatButton =
+  document.getElementById("newChatButton");
+
+
+/* =========================
+   المحادثات
+========================= */
+
+let conversations = [];
+
+try {
+
+  conversations =
+    JSON.parse(
+      localStorage.getItem(
+        "notwin_conversations"
+      ) || "[]"
+    );
+
+  if (!Array.isArray(conversations)) {
+    conversations = [];
+  }
+
+} catch (error) {
+
+  console.error(
+    "LocalStorage error:",
+    error
   );
 
-
-let conversations =
-  JSON.parse(
-    localStorage.getItem(
-      "notwin_conversations"
-    ) || "[]"
-  );
-
-
-let currentConversationId =
-  null;
-
-
-/* حفظ */
-
-function saveConversations() {
-
-  localStorage.setItem(
-    "notwin_conversations",
-    JSON.stringify(
-      conversations
-    )
-  );
+  conversations = [];
 
 }
 
 
-/* عنوان المحادثة */
+let currentConversationId = null;
+
+
+/* =========================
+   الحفظ
+========================= */
+
+function saveConversations() {
+
+  try {
+
+    localStorage.setItem(
+      "notwin_conversations",
+      JSON.stringify(conversations)
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Save error:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================
+   العنوان
+========================= */
 
 function getTitle(text) {
 
   const clean =
-    text
-      .replace(/\s+/g," ")
+    String(text)
+      .replace(/\s+/g, " ")
       .trim();
 
-  if(clean.length <= 30)
-    return clean;
+  if (!clean) {
+    return "محادثة جديدة";
+  }
 
-  return clean.substring(
-    0,
-    30
-  ) + "...";
+  if (clean.length <= 30) {
+    return clean;
+  }
+
+  return clean.substring(0, 30) + "...";
 
 }
 
 
-/* إنشاء محادثة */
+/* =========================
+   إنشاء محادثة
+========================= */
 
 function createConversation() {
 
@@ -675,31 +724,33 @@ function createConversation() {
 }
 
 
-/* الحالية */
+/* =========================
+   الحصول على الحالية
+========================= */
 
 function getCurrentConversation() {
 
   return conversations.find(
-    c =>
-      c.id ===
+    conversation =>
+      conversation.id ===
       currentConversationId
   );
 
 }
 
 
-/* إضافة رسالة */
+/* =========================
+   حفظ رسالة
+========================= */
 
-function saveMessage(
-  role,
-  text
-) {
+function saveMessage(role, text) {
 
   const conversation =
     getCurrentConversation();
 
-  if(!conversation)
+  if (!conversation) {
     return;
+  }
 
   conversation.messages.push({
 
@@ -709,7 +760,8 @@ function saveMessage(
 
   });
 
-  if(
+
+  if (
     role === "user" &&
     conversation.title ===
     "محادثة جديدة"
@@ -720,6 +772,7 @@ function saveMessage(
 
   }
 
+
   saveConversations();
 
   renderConversationList();
@@ -727,7 +780,9 @@ function saveMessage(
 }
 
 
-/* عرض رسالة */
+/* =========================
+   رسالة على الشاشة
+========================= */
 
 function addMessageToScreen(
   role,
@@ -735,17 +790,13 @@ function addMessageToScreen(
 ) {
 
   const message =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
   message.className =
     "message " + role;
 
   const bubble =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
   bubble.className =
     "bubble";
@@ -764,38 +815,35 @@ function addMessageToScreen(
 }
 
 
-/* صورة */
+/* =========================
+   صورة على الشاشة
+========================= */
 
-function addImageToScreen(
-  image
-) {
+function addImageToScreen(image) {
 
   const message =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
   message.className =
     "message ai";
 
   const container =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
   container.className =
     "image-message";
 
   const img =
-    document.createElement(
-      "img"
-    );
+    document.createElement("img");
 
   img.className =
     "generated-image";
 
   img.src =
     image;
+
+  img.alt =
+    "صورة مولدة بواسطة notwin iA";
 
   container.appendChild(
     img
@@ -812,7 +860,39 @@ function addImageToScreen(
 }
 
 
-/* عرض المحادثة */
+/* =========================
+   شاشة البداية
+========================= */
+
+function showWelcome() {
+
+  chat.innerHTML = `
+
+    <section class="welcome">
+
+      <div class="orb">
+        ✦
+      </div>
+
+      <h1>
+        مرحباً بك في
+        <span>notwin iA</span>
+      </h1>
+
+      <p>
+        مساعدك الذكي للبرمجة، الكتابة، التعلم والأفكار.
+      </p>
+
+    </section>
+
+  `;
+
+}
+
+
+/* =========================
+   عرض المحادثة
+========================= */
 
 function renderConversation() {
 
@@ -821,31 +901,15 @@ function renderConversation() {
   const conversation =
     getCurrentConversation();
 
-  if(
+  if (
     !conversation ||
+    !Array.isArray(
+      conversation.messages
+    ) ||
     conversation.messages.length === 0
   ) {
 
-    chat.innerHTML = `
-
-      <section class="welcome">
-
-        <div class="orb">
-          ✦
-        </div>
-
-        <h1>
-          مرحباً بك في
-          <span>notwin iA</span>
-        </h1>
-
-        <p>
-          مساعدك الذكي للبرمجة، الكتابة، التعلم والأفكار.
-        </p>
-
-      </section>
-
-    `;
+    showWelcome();
 
     return;
 
@@ -855,7 +919,7 @@ function renderConversation() {
   conversation.messages.forEach(
     message => {
 
-      if(
+      if (
         message.role ===
         "image"
       ) {
@@ -876,19 +940,38 @@ function renderConversation() {
     }
   );
 
+  scrollToBottom();
+
 }
 
 
-/* القائمة */
+/* =========================
+   النزول لآخر الرسائل
+========================= */
+
+function scrollToBottom() {
+
+  setTimeout(() => {
+
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: "smooth"
+    });
+
+  }, 50);
+
+}
+
+
+/* =========================
+   قائمة المحادثات
+========================= */
 
 function renderConversationList() {
 
-  conversationList.innerHTML =
-    "";
+  conversationList.innerHTML = "";
 
-  if(
-    conversations.length === 0
-  ) {
+  if (conversations.length === 0) {
 
     conversationList.innerHTML =
       `<div class="empty-chats">
@@ -904,14 +987,13 @@ function renderConversationList() {
     conversation => {
 
       const item =
-        document.createElement(
-          "div"
-        );
+        document.createElement("div");
 
       item.className =
         "conversation";
 
-      if(
+
+      if (
         conversation.id ===
         currentConversationId
       ) {
@@ -924,9 +1006,7 @@ function renderConversationList() {
 
 
       const title =
-        document.createElement(
-          "div"
-        );
+        document.createElement("div");
 
       title.className =
         "conversation-title";
@@ -936,8 +1016,9 @@ function renderConversationList() {
         conversation.title;
 
 
-      title.onclick =
-        () => {
+      title.addEventListener(
+        "click",
+        function () {
 
           currentConversationId =
             conversation.id;
@@ -948,23 +1029,26 @@ function renderConversationList() {
 
           closeSidebar();
 
-        };
+        }
+      );
 
 
       const del =
-        document.createElement(
-          "button"
-        );
+        document.createElement("button");
 
       del.className =
         "delete-chat";
+
+      del.type =
+        "button";
 
       del.textContent =
         "🗑️";
 
 
-      del.onclick =
-        event => {
+      del.addEventListener(
+        "click",
+        function (event) {
 
           event.stopPropagation();
 
@@ -975,7 +1059,8 @@ function renderConversationList() {
                 conversation.id
             );
 
-          if(
+
+          if (
             currentConversationId ===
             conversation.id
           ) {
@@ -987,11 +1072,13 @@ function renderConversationList() {
 
           }
 
+
           saveConversations();
 
           renderConversationList();
 
-        };
+        }
+      );
 
 
       item.appendChild(
@@ -1012,247 +1099,21 @@ function renderConversationList() {
 }
 
 
-/* إرسال الرسالة */
-
-async function sendMessage() {
-
-  const text =
-    input.value.trim();
-
-  if(!text)
-    return;
-
-
-  if(!currentConversationId)
-    createConversation();
-
-
-  addMessageToScreen(
-    "user",
-    text
-  );
-
-  saveMessage(
-    "user",
-    text
-  );
-
-
-  input.value = "";
-
-  input.disabled = true;
-
-  sendButton.disabled =
-    true;
-
-  typing.style.display =
-    "block";
-
-
-  try {
-
-    const response =
-      await fetch(
-        API_URL + "/chat",
-        {
-
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
-
-          body:
-            JSON.stringify({
-              message: text
-            })
-
-        }
-      );
-
-
-    if(!response.ok) {
-
-      let error =
-        "";
-
-      try {
-
-        const data =
-          await response.json();
-
-        error =
-          data.error || "";
-
-      } catch {}
-
-
-      if(
-        response.status ===
-        429
-      ) {
-
-        throw new Error(
-          "DAILY_LIMIT"
-        );
-
-      }
-
-
-      throw new Error(
-        error ||
-        "SERVER_ERROR"
-      );
-
-    }
-
-
-    if(!response.body)
-      throw new Error(
-        "NO_STREAM"
-      );
-
-
-    typing.style.display =
-      "none";
-
-
-    const message =
-      document.createElement(
-        "div"
-      );
-
-    message.className =
-      "message ai";
-
-
-    const bubble =
-      document.createElement(
-        "div"
-      );
-
-    bubble.className =
-      "bubble";
-
-
-    message.appendChild(
-      bubble
-    );
-
-    chat.appendChild(
-      message
-    );
-
-
-    const reader =
-      response.body.getReader();
-
-    const decoder =
-      new TextDecoder(
-        "utf-8"
-      );
-
-    let fullText =
-      "";
-
-
-    while(true) {
-
-      const {
-        value,
-        done
-      } =
-        await reader.read();
-
-      if(done)
-        break;
-
-
-      const chunk =
-        decoder.decode(
-          value,
-          {
-            stream:true
-          }
-        );
-
-      fullText +=
-        chunk;
-
-      bubble.textContent =
-        fullText;
-
-    }
-
-
-    if(fullText.trim()) {
-
-      saveMessage(
-        "ai",
-        fullText
-      );
-
-    }
-
-
-  } catch(error) {
-
-    typing.style.display =
-      "none";
-
-
-    const bubble =
-      createErrorBubble();
-
-
-    if(
-      error.message ===
-      "DAILY_LIMIT"
-    ) {
-
-      bubble.textContent =
-        "⏳ وصلت للحد الأقصى من المحاولات المجانية اليوم 😴💕\nارجع غدًا ونكملو من وين حبستنا.";
-
-    } else {
-
-      bubble.textContent =
-        "⚙️ صار مشكل في الاتصال بالخدمة.\nعاود المحاولة بعد شوية 😕";
-
-    }
-
-  } finally {
-
-    input.disabled =
-      false;
-
-    sendButton.disabled =
-      false;
-
-    input.focus();
-
-  }
-
-}
-
-
-/* رسالة خطأ */
+/* =========================
+   رسالة خطأ
+========================= */
 
 function createErrorBubble() {
 
   const message =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
   message.className =
     "message ai";
 
 
   const bubble =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
   bubble.className =
     "bubble";
@@ -1272,19 +1133,290 @@ function createErrorBubble() {
 }
 
 
-/* توليد صورة */
+/* =========================
+   إرسال الرسالة
+========================= */
+
+async function sendMessage() {
+
+  const text =
+    input.value.trim();
+
+  if (!text) {
+    return;
+  }
+
+
+  console.log(
+    "Sending message:",
+    text
+  );
+
+
+  if (!currentConversationId) {
+
+    createConversation();
+
+  }
+
+
+  addMessageToScreen(
+    "user",
+    text
+  );
+
+  saveMessage(
+    "user",
+    text
+  );
+
+
+  input.value = "";
+
+  input.disabled = true;
+
+  sendButton.disabled = true;
+
+  typing.textContent =
+    "notwin iA يكتب...";
+
+  typing.style.display =
+    "block";
+
+
+  scrollToBottom();
+
+
+  try {
+
+    const response =
+      await fetch(
+        API_URL + "/chat",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify({
+              message: text
+            })
+        }
+      );
+
+
+    if (!response.ok) {
+
+      let errorText =
+        "";
+
+      try {
+
+        const data =
+          await response.json();
+
+        errorText =
+          data.error || "";
+
+      } catch (error) {
+
+        console.error(
+          "Error reading server response:",
+          error
+        );
+
+      }
+
+
+      if (
+        response.status ===
+        429
+      ) {
+
+        throw new Error(
+          "DAILY_LIMIT"
+        );
+
+      }
+
+
+      throw new Error(
+        errorText ||
+        "SERVER_ERROR"
+      );
+
+    }
+
+
+    if (!response.body) {
+
+      throw new Error(
+        "NO_STREAM"
+      );
+
+    }
+
+
+    typing.style.display =
+      "none";
+
+
+    const message =
+      document.createElement("div");
+
+    message.className =
+      "message ai";
+
+
+    const bubble =
+      document.createElement("div");
+
+    bubble.className =
+      "bubble";
+
+
+    message.appendChild(
+      bubble
+    );
+
+    chat.appendChild(
+      message
+    );
+
+
+    const reader =
+      response.body.getReader();
+
+    const decoder =
+      new TextDecoder("utf-8");
+
+    let fullText =
+      "";
+
+
+    while (true) {
+
+      const result =
+        await reader.read();
+
+      if (result.done) {
+        break;
+      }
+
+
+      const chunk =
+        decoder.decode(
+          result.value,
+          {
+            stream: true
+          }
+        );
+
+
+      fullText +=
+        chunk;
+
+
+      bubble.textContent =
+        fullText;
+
+
+      scrollToBottom();
+
+    }
+
+
+    const finalChunk =
+      decoder.decode();
+
+    if (finalChunk) {
+
+      fullText +=
+        finalChunk;
+
+      bubble.textContent =
+        fullText;
+
+    }
+
+
+    if (fullText.trim()) {
+
+      saveMessage(
+        "ai",
+        fullText
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Chat error:",
+      error
+    );
+
+
+    typing.style.display =
+      "none";
+
+
+    const bubble =
+      createErrorBubble();
+
+
+    if (
+      error.message ===
+      "DAILY_LIMIT"
+    ) {
+
+      bubble.textContent =
+        "⏳ وصلت للحد الأقصى من المحاولات المجانية اليوم.\nارجع غدًا ونكملو من وين حبستنا 💚";
+
+    } else {
+
+      bubble.textContent =
+        "⚙️ صار مشكل في الاتصال بالخدمة.\nتأكد من السيرفر وحاول مرة أخرى 😕";
+
+    }
+
+  } finally {
+
+    input.disabled =
+      false;
+
+    sendButton.disabled =
+      false;
+
+    input.focus();
+
+  }
+
+}
+
+
+/* =========================
+   توليد الصور
+========================= */
 
 async function generateImage() {
 
   const prompt =
     imagePrompt.value.trim();
 
-  if(!prompt)
+  if (!prompt) {
     return;
+  }
 
 
-  if(!currentConversationId)
+  if (!currentConversationId) {
+
     createConversation();
+
+  }
 
 
   imagePanel.classList.remove(
@@ -1295,10 +1427,8 @@ async function generateImage() {
   typing.textContent =
     "notwin iA يحضر الصورة... 🖼️";
 
-
   typing.style.display =
     "block";
-
 
   generateButton.disabled =
     true;
@@ -1335,12 +1465,19 @@ async function generateImage() {
       data =
         await response.json();
 
-    } catch {}
+    } catch (error) {
+
+      console.error(
+        "Image response error:",
+        error
+      );
+
+    }
 
 
-    if(!response.ok) {
+    if (!response.ok) {
 
-      if(
+      if (
         response.status ===
         429
       ) {
@@ -1351,6 +1488,7 @@ async function generateImage() {
 
       }
 
+
       throw new Error(
         data.error ||
         "IMAGE_ERROR"
@@ -1359,9 +1497,7 @@ async function generateImage() {
     }
 
 
-    if(
-      !data.image
-    ) {
+    if (!data.image) {
 
       throw new Error(
         "NO_IMAGE"
@@ -1372,7 +1508,7 @@ async function generateImage() {
 
     const imageUrl =
       "data:" +
-      data.mimeType +
+      (data.mimeType || "image/png") +
       ";base64," +
       data.image;
 
@@ -1386,46 +1522,59 @@ async function generateImage() {
       getCurrentConversation();
 
 
-    conversation.messages.push({
+    if (conversation) {
 
-      role:
-        "image",
+      conversation.messages.push({
 
-      text:
-        imageUrl
+        role:
+          "image",
 
-    });
+        text:
+          imageUrl
+
+      });
 
 
-    if(
-      conversation.title ===
-      "محادثة جديدة"
-    ) {
+      if (
+        conversation.title ===
+        "محادثة جديدة"
+      ) {
 
-      conversation.title =
-        getTitle(prompt);
+        conversation.title =
+          getTitle(prompt);
+
+      }
+
+
+      saveConversations();
+
+      renderConversationList();
 
     }
 
 
-    saveConversations();
-
-    renderConversationList();
+    scrollToBottom();
 
 
-  } catch(error) {
+  } catch (error) {
+
+    console.error(
+      "Image error:",
+      error
+    );
+
 
     const bubble =
       createErrorBubble();
 
 
-    if(
+    if (
       error.message ===
       "DAILY_LIMIT"
     ) {
 
       bubble.textContent =
-        "🖼️⏳ وصلت للحد المجاني لتوليد الصور اليوم 😴💕\nارجع غدًا ونكملو.";
+        "🖼️⏳ وصلت للحد المجاني لتوليد الصور اليوم.\nارجع غدًا ونكملو 💚";
 
     } else {
 
@@ -1445,54 +1594,102 @@ async function generateImage() {
     generateButton.disabled =
       false;
 
-    imagePrompt.value = "";
+    imagePrompt.value =
+      "";
 
   }
 
 }
 
 
-/* فتح لوحة الصور */
+/* =========================
+   زر الإرسال
+   مهم جدًا
+========================= */
 
-document
-  .getElementById(
-    "imageButton"
-  )
-  .addEventListener(
-    "click",
-    () => {
-
-      imagePanel.classList.toggle(
-        "show"
-      );
-
-      if(
-        imagePanel.classList.contains(
-          "show"
-        )
-      ) {
-
-        imagePrompt.focus();
-
-      }
-
-    }
-  );
-
-
-/* توليد */
-
-generateButton.addEventListener(
+sendButton.addEventListener(
   "click",
-  generateImage
+  function () {
+
+    sendMessage();
+
+  }
 );
 
 
+/* =========================
+   Enter
+========================= */
+
+input.addEventListener(
+  "keydown",
+  function (event) {
+
+    if (
+      event.key ===
+      "Enter"
+    ) {
+
+      event.preventDefault();
+
+      sendMessage();
+
+    }
+
+  }
+);
+
+
+/* =========================
+   لوحة الصور
+========================= */
+
+imageButton.addEventListener(
+  "click",
+  function () {
+
+    imagePanel.classList.toggle(
+      "show"
+    );
+
+
+    if (
+      imagePanel.classList.contains(
+        "show"
+      )
+    ) {
+
+      imagePrompt.focus();
+
+    }
+
+  }
+);
+
+
+/* =========================
+   زر توليد الصورة
+========================= */
+
+generateButton.addEventListener(
+  "click",
+  function () {
+
+    generateImage();
+
+  }
+);
+
+
+/* =========================
+   Enter في الصور
+========================= */
+
 imagePrompt.addEventListener(
   "keydown",
-  event => {
+  function (event) {
 
-    if(
+    if (
       event.key ===
       "Enter"
     ) {
@@ -1507,36 +1704,34 @@ imagePrompt.addEventListener(
 );
 
 
-/* القائمة */
+/* =========================
+   فتح القائمة
+========================= */
 
-document
-  .getElementById(
-    "menuButton"
-  )
-  .addEventListener(
-    "click",
-    () => {
+menuButton.addEventListener(
+  "click",
+  function () {
 
-      sidebar.classList.add(
-        "open"
-      );
+    sidebar.classList.add(
+      "open"
+    );
 
-      overlay.classList.add(
-        "show"
-      );
+    overlay.classList.add(
+      "show"
+    );
 
-    }
-  );
+  }
+);
 
 
-document
-  .getElementById(
-    "closeMenu"
-  )
-  .addEventListener(
-    "click",
-    closeSidebar
-  );
+/* =========================
+   غلق القائمة
+========================= */
+
+closeMenu.addEventListener(
+  "click",
+  closeSidebar
+);
 
 
 overlay.addEventListener(
@@ -1558,52 +1753,55 @@ function closeSidebar() {
 }
 
 
-/* محادثة جديدة */
+/* =========================
+   محادثة جديدة
+========================= */
 
-document
-  .getElementById(
-    "newChatButton"
-  )
-  .addEventListener(
-    "click",
-    () => {
+newChatButton.addEventListener(
+  "click",
+  function () {
 
-      createConversation();
+    createConversation();
 
-      closeSidebar();
+    closeSidebar();
 
-      input.focus();
-
-    }
-  );
-
-
-/* Enter */
-
-input.addEventListener(
-  "keydown",
-  event => {
-
-    if(
-      event.key ===
-      "Enter"
-    ) {
-
-      event.preventDefault();
-
-      sendMessage();
-
-    }
+    input.focus();
 
   }
 );
 
 
-/* البداية */
+/* =========================
+   البداية
+========================= */
 
 renderConversationList();
+
+
+/*
+  إذا كان عندنا محادثات محفوظة،
+  نفتح آخر محادثة تلقائياً.
+*/
+
+if (
+  conversations.length > 0
+) {
+
+  currentConversationId =
+    conversations[0].id;
+
+  renderConversation();
+
+}
+
+
+/* جاهز */
+
+console.log(
+  "notwin iA interface ready ✅"
+);
 
 </script>
 
 </body>
-  </html>
+</html>
