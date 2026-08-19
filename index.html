@@ -15,214 +15,232 @@
     }
 
     body {
-      background: #09090f;
+      background: #0b0f0d;
       color: #fff;
       min-height: 100vh;
     }
 
     .app {
-      max-width: 600px;
+      max-width: 700px;
       margin: auto;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      padding: 15px;
     }
 
     .header {
+      height: 62px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 5px 20px;
+      padding: 10px 16px;
+      border-bottom: 1px solid #202722;
+      background: #0b0f0d;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
     .logo {
-      font-size: 27px;
+      font-size: 22px;
       font-weight: bold;
     }
 
     .logo span {
-      color: #9b6cff;
+      color: #19d66b;
     }
 
-    .menu,
-    .profile {
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
-      background: #171722;
-      border: 1px solid #292938;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 21px;
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: #ddd;
+      font-size: 22px;
+      cursor: pointer;
     }
 
-    .subtitle {
-      text-align: center;
-      color: #aaa;
-      font-size: 13px;
-      margin-top: -15px;
-      margin-bottom: 20px;
-    }
-
-    .welcome {
-      background: linear-gradient(145deg, #171522, #101017);
-      border: 1px solid #29263a;
-      border-radius: 25px;
-      padding: 25px 20px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
-    .orb {
-      width: 75px;
-      height: 75px;
-      margin: 0 auto 15px;
-      border-radius: 50%;
-      background: radial-gradient(
-        circle at 35% 30%,
-        #c3a5ff,
-        #7040d9 50%,
-        #27134f
-      );
-      box-shadow: 0 0 35px #7544e866;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 34px;
-    }
-
-    .welcome h1 {
-      font-size: 21px;
-      margin-bottom: 10px;
-    }
-
-    .welcome h1 span {
-      color: #9b6cff;
-    }
-
-    .welcome p {
-      color: #aaa;
-      line-height: 1.8;
-      font-size: 14px;
+    .icon-btn:hover {
+      background: #171d19;
     }
 
     .chat {
       flex: 1;
-      padding-bottom: 15px;
+      padding: 25px 15px 150px;
+      overflow-x: hidden;
+    }
+
+    .welcome {
+      text-align: center;
+      padding: 55px 15px 35px;
+    }
+
+    .orb {
+      width: 64px;
+      height: 64px;
+      margin: auto auto 18px;
+      border-radius: 50%;
+      background: #19d66b;
+      color: #07120b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      box-shadow: 0 0 35px rgba(25, 214, 107, .25);
+    }
+
+    .welcome h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .welcome h1 span {
+      color: #19d66b;
+    }
+
+    .welcome p {
+      color: #8f9992;
+      font-size: 14px;
+      line-height: 1.8;
     }
 
     .message {
-      max-width: 85%;
-      padding: 15px 17px;
-      margin: 12px 0;
-      border-radius: 20px;
+      display: flex;
+      margin: 18px 0;
+      gap: 10px;
       line-height: 1.8;
       font-size: 15px;
-      word-wrap: break-word;
+    }
+
+    .message.user {
+      justify-content: flex-start;
+    }
+
+    .message.ai {
+      justify-content: flex-end;
+    }
+
+    .bubble {
+      max-width: 85%;
+      padding: 12px 15px;
+      border-radius: 18px;
       white-space: pre-wrap;
+      word-break: break-word;
     }
 
-    .ai {
-      background: #171721;
-      border: 1px solid #292938;
-      margin-left: auto;
-      margin-right: 0;
+    .user .bubble {
+      background: #19d66b;
+      color: #06120a;
+      border-bottom-left-radius: 5px;
     }
 
-    .user {
-      background: linear-gradient(135deg, #7345dc, #915df4);
-      margin-right: auto;
-      margin-left: 0;
+    .ai .bubble {
+      background: #171c19;
+      border: 1px solid #252d28;
+      color: #f1f4f2;
+      border-bottom-right-radius: 5px;
     }
 
     .time {
       display: block;
+      margin-top: 5px;
       font-size: 10px;
-      opacity: .55;
-      margin-top: 7px;
+      opacity: .45;
+    }
+
+    .typing {
+      display: none;
+      color: #7d8a82;
+      font-size: 13px;
+      padding: 5px 18px;
+    }
+
+    .input-wrapper {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(700px, 100%);
+      padding: 12px 14px 18px;
+      background: linear-gradient(
+        transparent,
+        #0b0f0d 25%
+      );
     }
 
     .input-area {
       display: flex;
       align-items: center;
       gap: 8px;
-      background: #14141d;
-      border: 1px solid #302e40;
-      padding: 8px;
-      border-radius: 28px;
-      margin-bottom: 14px;
-    }
-
-    .input-area button {
-      border: none;
-      width: 43px;
-      height: 43px;
-      border-radius: 50%;
-      background: #20202c;
-      color: #a87cff;
-      font-size: 20px;
-      cursor: pointer;
+      background: #171c19;
+      border: 1px solid #303a33;
+      border-radius: 26px;
+      padding: 7px;
+      box-shadow: 0 5px 30px rgba(0, 0, 0, .3);
     }
 
     .input-area input {
       flex: 1;
+      border: 0;
+      outline: 0;
       background: transparent;
-      border: none;
-      outline: none;
       color: white;
       font-size: 15px;
+      padding: 11px 5px;
       text-align: right;
     }
 
     .input-area input::placeholder {
-      color: #777;
+      color: #737d76;
     }
 
     .send {
-      background: linear-gradient(135deg, #7545df) !important;
-      color: white !important;
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 50%;
+      background: #19d66b;
+      color: #06120a;
+      font-size: 20px;
+      cursor: pointer;
+      flex-shrink: 0;
     }
 
     .send:disabled {
-      opacity: .5;
+      opacity: .45;
+      cursor: default;
     }
 
-    .nav {
-      display: flex;
-      justify-content: space-around;
-      background: #12121a;
-      border: 1px solid #292936;
-      border-radius: 25px;
-      padding: 12px 5px;
+    .attach {
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: #9aa49e;
+      font-size: 20px;
+      cursor: pointer;
+      flex-shrink: 0;
     }
 
-    .nav-item {
-      color: #888;
-      text-align: center;
-      font-size: 11px;
+    .attach:hover {
+      background: #202722;
     }
 
-    .nav-item.active {
-      color: #a878ff;
-    }
+    @media (max-width: 600px) {
+      .chat {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
 
-    .nav-icon {
-      display: block;
-      font-size: 21px;
-      margin-bottom: 4px;
-    }
+      .welcome {
+        padding-top: 40px;
+      }
 
-    .typing {
-      display: none;
-      color: #999;
-      font-size: 13px;
-      padding: 8px;
-    }
-
-    .error {
-      color: #ff8b8b;
+      .welcome h1 {
+        font-size: 21px;
+      }
     }
   </style>
 </head>
@@ -231,106 +249,59 @@
 
   <div class="app">
 
-    <div class="header">
-
-      <div class="menu">
-        ☰
-      </div>
+    <header class="header">
+      <button class="icon-btn" type="button">☰</button>
 
       <div class="logo">
         notwin <span>iA</span>
       </div>
 
-      <div class="profile">
-        ◉
-      </div>
+      <button class="icon-btn" type="button">◉</button>
+    </header>
 
-    </div>
+    <main class="chat" id="chat">
 
-    <div class="subtitle">
-      مساعدك الذكي
-    </div>
+      <section class="welcome" id="welcome">
 
-    <div class="welcome">
+        <div class="orb">✦</div>
 
-      <div class="orb">
-        ✦
-      </div>
+        <h1>
+          مرحباً بك في <span>notwin iA</span>
+        </h1>
 
-      <h1>
-        مرحباً بك في <span>notwin iA</span>
-      </h1>
+        <p>
+          مساعدك الذكي للبرمجة، الكتابة، التعلم والأفكار.
+        </p>
 
-      <p>
-        ذكاء اصطناعي يساعدك في البرمجة،
-        الكتابة، التعلم، والأفكار وأكثر.
-      </p>
+      </section>
 
-    </div>
-
-    <div class="chat" id="chat">
-
-      <div class="message ai">
-
-        سلام 👋<br>
-        كيفاش نقدر نعاونك اليوم؟
-
-        <span class="time">
-          الآن
-        </span>
-
-      </div>
-
-    </div>
+    </main>
 
     <div class="typing" id="typing">
       notwin iA يكتب...
     </div>
 
-    <div class="input-area">
+    <div class="input-wrapper">
 
-      <button
-        type="button"
-        onclick="alert('رفع الملفات نضيفوه في المرحلة القادمة')">
-        📎
-      </button>
+      <div class="input-area">
 
-      <input
-        id="messageInput"
-        type="text"
-        placeholder="اكتب رسالتك..."
-        autocomplete="off">
+        <button class="attach" type="button">
+          +
+        </button>
 
-      <button
-        id="sendButton"
-        class="send"
-        type="button"
-        onclick="sendMessage()">
-        ➤
-      </button>
+        <input
+          id="messageInput"
+          type="text"
+          placeholder="اكتب رسالتك..."
+          autocomplete="off">
 
-    </div>
+        <button
+          id="sendButton"
+          class="send"
+          type="button">
+          ↑
+        </button>
 
-    <div class="nav">
-
-      <div class="nav-item active">
-        <span class="nav-icon">💬</span>
-        الدردشة
-      </div>
-
-      <div class="nav-item">
-        <span class="nav-icon">🗨</span>
-        المحادثات
-      </div>
-
-      <div class="nav-item">
-        <span class="nav-icon">☆</span>
-        المفضلة
-      </div>
-
-      <div class="nav-item">
-        <span class="nav-icon">⌘</span>
-        الأدوات
       </div>
 
     </div>
@@ -339,45 +310,39 @@
 
   <script>
 
-    // رابط السيرفر الحالي
-    const API_URL = "https://notwin-ia-1.onrender.com/chat";
+    const API_URL =
+      "https://notwin-ia-1.onrender.com/chat";
 
-    const input = document.getElementById("messageInput");
-    const chat = document.getElementById("chat");
-    const typing = document.getElementById("typing");
-    const sendButton = document.getElementById("sendButton");
+    const input =
+      document.getElementById("messageInput");
 
-    input.addEventListener("keydown", function(event) {
+    const chat =
+      document.getElementById("chat");
 
-      if (event.key === "Enter") {
+    const typing =
+      document.getElementById("typing");
 
-        event.preventDefault();
+    const sendButton =
+      document.getElementById("sendButton");
 
-        sendMessage();
+    const welcome =
+      document.getElementById("welcome");
 
-      }
+    function addUserMessage(text) {
 
-    });
+      const message =
+        document.createElement("div");
 
-    function addMessage(text, type) {
+      message.className = "message user";
 
-      const message = document.createElement("div");
+      const bubble =
+        document.createElement("div");
 
-      message.className = "message " + type;
+      bubble.className = "bubble";
 
-      const content = document.createElement("div");
+      bubble.textContent = text;
 
-      content.textContent = text;
-
-      const time = document.createElement("span");
-
-      time.className = "time";
-
-      time.textContent = "الآن";
-
-      message.appendChild(content);
-
-      message.appendChild(time);
+      message.appendChild(bubble);
 
       chat.appendChild(message);
 
@@ -385,76 +350,121 @@
         behavior: "smooth",
         block: "end"
       });
+    }
 
+    function createAIMessage() {
+
+      const message =
+        document.createElement("div");
+
+      message.className = "message ai";
+
+      const bubble =
+        document.createElement("div");
+
+      bubble.className = "bubble";
+
+      message.appendChild(bubble);
+
+      chat.appendChild(message);
+
+      return bubble;
     }
 
     async function sendMessage() {
 
-      const text = input.value.trim();
+      const text =
+        input.value.trim();
 
-      if (!text) {
-        return;
+      if (!text) return;
+
+      if (welcome) {
+        welcome.style.display = "none";
       }
 
-      addMessage(text, "user");
+      addUserMessage(text);
 
       input.value = "";
-
       input.disabled = true;
-
       sendButton.disabled = true;
 
       typing.style.display = "block";
 
       try {
 
-        const response = await fetch(API_URL, {
+        const response =
+          await fetch(API_URL, {
 
-          method: "POST",
+            method: "POST",
 
-          headers: {
-            "Content-Type": "application/json"
-          },
+            headers: {
+              "Content-Type": "application/json"
+            },
 
-          body: JSON.stringify({
-            message: text
-          })
+            body: JSON.stringify({
+              message: text
+            })
 
-        });
-
-        let data;
-
-        try {
-
-          data = await response.json();
-
-        } catch {
-
-          throw new Error("السيرفر رجع رد غير صالح");
-
-        }
+          });
 
         if (!response.ok) {
 
-          throw new Error(
-            data.error || "حدث خطأ في السيرفر"
-          );
+          let errorText =
+            "حدث خطأ في السيرفر";
 
+          try {
+
+            const errorData =
+              await response.json();
+
+            errorText =
+              errorData.error || errorText;
+
+          } catch {}
+
+          throw new Error(errorText);
+        }
+
+        if (!response.body) {
+          throw new Error("Streaming غير متاح");
         }
 
         typing.style.display = "none";
 
-        if (data.reply) {
+        const bubble =
+          createAIMessage();
 
-          addMessage(data.reply, "ai");
+        const reader =
+          response.body.getReader();
 
-        } else {
+        const decoder =
+          new TextDecoder("utf-8");
 
-          addMessage(
-            "ما قدرتش نجيب الرد 😕",
-            "ai"
-          );
+        let fullText = "";
 
+        while (true) {
+
+          const {
+            value,
+            done
+          } = await reader.read();
+
+          if (done) break;
+
+          const chunk =
+            decoder.decode(value, {
+              stream: true
+            });
+
+          fullText += chunk;
+
+          bubble.textContent =
+            fullText;
+
+          bubble.parentElement.scrollIntoView({
+            behavior: "smooth",
+            block: "end"
+          });
         }
 
       } catch (error) {
@@ -463,25 +473,43 @@
 
         typing.style.display = "none";
 
-        addMessage(
-          "صار خطأ في الاتصال بالسيرفر 😕",
-          "ai"
-        );
+        const bubble =
+          createAIMessage();
+
+        bubble.textContent =
+          "صار خطأ في الاتصال بالسيرفر 😕";
 
       } finally {
 
         input.disabled = false;
-
         sendButton.disabled = false;
-
         input.focus();
 
       }
-
     }
+
+    sendButton.addEventListener(
+      "click",
+      sendMessage
+    );
+
+    input.addEventListener(
+      "keydown",
+      function(event) {
+
+        if (event.key === "Enter") {
+
+          event.preventDefault();
+
+          sendMessage();
+
+        }
+
+      }
+    );
 
   </script>
 
 </body>
 
-  </html>
+</html>
