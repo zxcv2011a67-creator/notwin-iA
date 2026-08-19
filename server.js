@@ -12,7 +12,13 @@ app.use((req, res, next) => {
   next();
 });
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const apiKey = process.env.GEMINI_API_KEY;
+
+if (!apiKey) {
+  console.error("GEMINI_API_KEY is missing");
+}
+
+const genAI = new GoogleGenerativeAI(apiKey);
 
 app.get("/", (req, res) => {
   res.send("notwin iA server is running");
@@ -20,16 +26,16 @@ app.get("/", (req, res) => {
 
 app.post("/chat", async (req, res) => {
   try {
-    const message = req.body.message;
+    const message = req.body?.message;
 
-    if (!message) {
+    if (!message || !message.trim()) {
       return res.status(400).json({
         error: "الرسالة فارغة"
       });
     }
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash"
+      model: "gemini-2.5-flash"
     });
 
     const result = await model.generateContent(message);
@@ -40,10 +46,10 @@ app.post("/chat", async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Gemini error:", error);
 
     res.status(500).json({
-      error: "حدث خطأ في Gemini"
+      error: "حدث خطأ أثناء الاتصال بـ Gemini"
     });
   }
 });
