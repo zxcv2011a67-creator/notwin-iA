@@ -27,19 +27,16 @@ app.use((req, res, next) => {
 const apiKey = process.env.GEMINI_API_KEY;
 
 if (!apiKey) {
-  console.error("❌ GEMINI_API_KEY is missing");
+  console.error("GEMINI_API_KEY is missing");
 }
 
-// الصفحة الرئيسية
 app.get("/", (req, res) => {
   res.json({
     status: "online",
-    app: "notwin iA",
-    message: "notwin iA server is running"
+    app: "notwin iA"
   });
 });
 
-// فحص السيرفر
 app.get("/health", (req, res) => {
   res.json({
     status: "ok",
@@ -47,12 +44,11 @@ app.get("/health", (req, res) => {
   });
 });
 
-// الدردشة
 app.post("/chat", async (req, res) => {
   try {
     if (!apiKey) {
       return res.status(500).json({
-        error: "GEMINI_API_KEY غير موجود في Render"
+        error: "GEMINI_API_KEY غير موجود"
       });
     }
 
@@ -67,13 +63,12 @@ app.post("/chat", async (req, res) => {
     const genAI = new GoogleGenerativeAI(apiKey);
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash"
+      model: "gemini-3.6-flash"
     });
 
     const result = await model.generateContent(message.trim());
 
     const response = await result.response;
-
     const reply = response.text();
 
     if (!reply) {
@@ -87,8 +82,7 @@ app.post("/chat", async (req, res) => {
     });
 
   } catch (error) {
-
-    console.error("❌ Gemini error:", error);
+    console.error("Gemini error:", error);
 
     return res.status(500).json({
       error: "حدث خطأ أثناء الاتصال بـ Gemini",
@@ -100,5 +94,5 @@ app.post("/chat", async (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ notwin iA server running on port ${PORT}`);
+  console.log(`notwin iA server running on port ${PORT}`);
 });
