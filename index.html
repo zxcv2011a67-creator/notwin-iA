@@ -357,6 +357,74 @@ function sendMessage() {
 }
 
 </script>
+<script>
+const API_URL = "https://notwin-ia.onrender.com/chat";
 
-</body>
-  </html>
+function handleKey(event) {
+  if (event.key === "Enter") {
+    sendMessage();
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById("messageInput");
+  const chat = document.getElementById("chat");
+  const typing = document.getElementById("typing");
+
+  const text = input.value.trim();
+
+  if (!text) return;
+
+  const userMessage = document.createElement("div");
+  userMessage.className = "message user";
+  userMessage.innerHTML =
+    text + '<span class="time">الآن ✓✓</span>';
+
+  chat.appendChild(userMessage);
+  input.value = "";
+  typing.style.display = "block";
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: text
+      })
+    });
+
+    const data = await response.json();
+
+    typing.style.display = "none";
+
+    const aiMessage = document.createElement("div");
+    aiMessage.className = "message ai";
+
+    aiMessage.innerHTML = data.reply
+      ? data.reply.replace(/\n/g, "<br>")
+      : "ما قدرتش نجيب الرد 😕";
+
+    chat.appendChild(aiMessage);
+
+  } catch (error) {
+    typing.style.display = "none";
+
+    const aiMessage = document.createElement("div");
+    aiMessage.className = "message ai";
+
+    aiMessage.innerHTML =
+      "صار خطأ في الاتصال بالسيرفر 😕";
+
+    chat.appendChild(aiMessage);
+
+    console.error(error);
+  }
+
+  window.scrollTo({
+    top: document.body.scrollHeight,
+    behavior: "smooth"
+  });
+}
+</script>
