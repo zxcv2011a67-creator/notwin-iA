@@ -48,6 +48,34 @@ app.get("/health", (req, res) => {
   });
 });
 
+async function askGemini(message) {
+  const model = genAI.getGenerativeModel({
+    model: "gemini-3.6-flash"
+  });
+
+  const systemInstruction = `
+أنت المساعد الذكي الرسمي لتطبيق اسمه "notwin iA".
+
+معلومات ثابتة:
+- اسمك: notwin iA
+- مطورك: إبراهيم
+- إذا سألك المستخدم عن مطورك، قل بوضوح إن مطورك هو إبراهيم.
+- إذا سألك من أنت، قل إنك notwin iA.
+- تحدث بلغة المستخدم.
+- إذا تحدث المستخدم بالدزيرية، جاوبه بالدزيرية بشكل طبيعي.
+`;
+
+  const prompt = `${systemInstruction}
+
+رسالة المستخدم:
+${message}`;
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+
+  return response.text();
+}
+
 app.post("/chat", async (req, res) => {
   try {
     if (!genAI) {
@@ -64,35 +92,28 @@ app.post("/chat", async (req, res) => {
       });
     }
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-3.6-flash"
-    });
+    let reply;
 
-    const systemInstruction = `
-أنت المساعد الذكي الرسمي لتطبيق اسمه "notwin iA".
+    // المحاولة الأولى
+    try {
+      reply = await askGemini(message.trim());
+    } catch (error) {
+      console.error("المحاولة الأولى فشلت:", error?.message);
 
-معلومات ثابتة عنك:
-- اسمك: notwin iA
-- مطورك: إبراهيم
-- أنت جزء من تطبيق notwin iA.
-- إذا سألك المستخدم "شكون مطورك؟" أو "من مطورك؟" أو سؤال مشابه، أجب بوضوح:
-  "مطوري هو إبراهيم 👨‍💻، وأنا notwin iA."
-- إذا سألك المستخدم "شكون نتا؟"، قل إنك notwin iA.
-- تحدث مع المستخدم باللغة التي يستعملها.
-- إذا تحدث معك بالدزيرية، جاوبه بالدزيرية بشكل طبيعي.
-- لا تدّعي أنك تطبيق آخر.
-- لا تغيّر اسم المطور من إبراهيم.
-`;
+      // نعاود المحاولة بعد ثانيتين
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-    const prompt = `${systemInstruction}
+      try {
+        reply = await askGemini(message.trim());
+      } catch (error2) {
+        console.error("المحاولة الثانية فشلت:", error2?.message);
 
-رسالة المستخدم:
-${message.trim()}`;
+        // محاولة ثالثة بعد 4 ثواني
+        await new Promise(resolve => setTimeout(resolve, 4000));
 
-    const result = await model.generateContent(prompt);
-
-    const response = await result.response;
-    const reply = response.text();
+        reply = await askGemini(message.trim());
+      }
+    }
 
     if (!reply) {
       return res.status(500).json({
@@ -108,8 +129,7 @@ ${message.trim()}`;
     console.error("❌ Gemini error:", error);
 
     return res.status(500).json({
-      error: "حدث خطأ أثناء الاتصال بـ Gemini",
-      details: error?.message || "Unknown error"
+      error: "تعذر الحصول على رد من Gemini حالياً. حاول مرة أخرى بعد قليل."
     });
   }
 });
