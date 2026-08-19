@@ -7,8 +7,14 @@ app.use(express.json({ limit: "1mb" }));
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Content-Type");
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type"
+  );
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, OPTIONS"
+  );
 
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
@@ -30,22 +36,24 @@ const genAI = apiKey
 const SYSTEM_PROMPT = `
 أنت notwin iA، مساعد ذكي داخل تطبيق notwin iA.
 مطورك هو إبراهيم.
-جاوب بلغة المستخدم، وإذا هدر بالدزيرية جاوبو بالدزيرية.
+جاوب بلغة المستخدم.
+إذا هدر المستخدم بالدزيرية، جاوبه بالدزيرية.
 إذا سقصاك شكون مطورك، قل: مطوري هو إبراهيم.
 `;
 
-// محاولة واحدة عادية + إعادة محاولة فقط عند أخطاء مؤقتة
 async function askGemini(message) {
   const model = genAI.getGenerativeModel({
     model: "gemini-3.6-flash"
   });
 
-  const result = await model.generateContent(
-    `${SYSTEM_PROMPT}\n\nالمستخدم:\n${message}`
+  const result = await model.generateContentStream(
+    `${SYSTEM_PROMPT}
+
+المستخدم:
+${message}`
   );
 
-  const response = await result.response;
-  return response.text();
+  return result.stream;
 }
 
 app.get("/", (req, res) => {
@@ -64,51 +72,48 @@ app.get("/health", (req, res) => {
 });
 
 app.post("/chat", async (req, res) => {
-  const message = req.body?.message;
-
-  if (!apiKey) {
-    return res.status(500).json({
-      error: "GEMINI_API_KEY غير موجود"
-    });
-  }
-
-  if (typeof message !== "string" || !message.trim()) {
-    return res.status(400).json({
-      error: "الرسالة فارغة"
-    });
-  }
-
   try {
-    let reply;
-
-    try {
-      reply = await askGemini(message.trim());
-    } catch (error) {
-      console.error("First Gemini attempt failed:", error?.message);
-
-      // نعاود فقط عند الخطأ المؤقت
-      if (error?.status === 429 || error?.status === 500 || error?.status === 503) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        reply = await askGemini(message.trim());
-      } else {
-        throw error;
-      }
-    }
-
-    if (!reply) {
+    if (!genAI) {
       return res.status(500).json({
-        error: "Gemini رجع رد فارغ"
+        error: "GEMINI_API_KEY غير موجود"
       });
     }
 
-    return res.json({ reply });
+    const message = req.body?.message;
+
+    if (typeof message !== "string" || !message.trim()) {
+      return res.status(400).json({
+        error: "الرسالة فارغة"
+      });
+    }
+
+    const stream = await askGemini(message.trim());
+
+    res.status(200);
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Transfer-Encoding", "chunked");
+
+    for await (const chunk of stream) {
+      const text = chunk.text();
+
+      if (text) {
+        res.write(text);
+      }
+    }
+
+    res.end();
 
   } catch (error) {
-    console.error("Gemini error:", error);
+    console.error("❌ Gemini error:", error);
 
-    return res.status(500).json({
-      error: "تعذر الحصول على الرد حالياً. حاول مرة أخرى."
-    });
+    if (!res.headersSent) {
+      return res.status(500).json({
+        error: "تعذر الحصول على الرد حالياً. حاول مرة أخرى."
+      });
+    }
+
+    res.end();
   }
 });
 
