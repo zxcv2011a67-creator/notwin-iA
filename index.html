@@ -4,9 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>notwin iA</title>
 
   <style>
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -16,7 +18,7 @@
 
     body {
       background: #0b0f0d;
-      color: #fff;
+      color: white;
       min-height: 100vh;
     }
 
@@ -24,8 +26,6 @@
       max-width: 700px;
       margin: auto;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
     }
 
     .header {
@@ -38,7 +38,7 @@
       background: #0b0f0d;
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 20;
     }
 
     .logo {
@@ -66,9 +66,7 @@
     }
 
     .chat {
-      flex: 1;
       padding: 25px 15px 150px;
-      overflow-x: hidden;
     }
 
     .welcome {
@@ -87,7 +85,7 @@
       align-items: center;
       justify-content: center;
       font-size: 30px;
-      box-shadow: 0 0 35px rgba(25, 214, 107, .25);
+      box-shadow: 0 0 35px rgba(25,214,107,.25);
     }
 
     .welcome h1 {
@@ -108,7 +106,6 @@
     .message {
       display: flex;
       margin: 18px 0;
-      gap: 10px;
       line-height: 1.8;
       font-size: 15px;
     }
@@ -122,7 +119,7 @@
     }
 
     .bubble {
-      max-width: 85%;
+      max-width: 88%;
       padding: 12px 15px;
       border-radius: 18px;
       white-space: pre-wrap;
@@ -142,11 +139,16 @@
       border-bottom-right-radius: 5px;
     }
 
-    .time {
+    .image-message {
+      max-width: 92%;
+    }
+
+    .generated-image {
+      width: 100%;
+      max-width: 500px;
+      border-radius: 18px;
       display: block;
-      margin-top: 5px;
-      font-size: 10px;
-      opacity: .45;
+      border: 1px solid #303a33;
     }
 
     .typing {
@@ -161,12 +163,13 @@
       bottom: 0;
       left: 50%;
       transform: translateX(-50%);
-      width: min(700px, 100%);
+      width: min(700px,100%);
       padding: 12px 14px 18px;
       background: linear-gradient(
         transparent,
         #0b0f0d 25%
       );
+      z-index: 15;
     }
 
     .input-area {
@@ -177,7 +180,6 @@
       border: 1px solid #303a33;
       border-radius: 26px;
       padding: 7px;
-      box-shadow: 0 5px 30px rgba(0, 0, 0, .3);
     }
 
     .input-area input {
@@ -195,78 +197,646 @@
       color: #737d76;
     }
 
-    .send {
-      width: 42px;
-      height: 42px;
-      border: 0;
-      border-radius: 50%;
-      background: #19d66b;
-      color: #06120a;
-      font-size: 20px;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
-    .send:disabled {
-      opacity: .45;
-      cursor: default;
-    }
-
+    .send,
     .attach {
       width: 42px;
       height: 42px;
       border: 0;
       border-radius: 50%;
-      background: transparent;
-      color: #9aa49e;
-      font-size: 20px;
       cursor: pointer;
       flex-shrink: 0;
     }
 
-    .attach:hover {
-      background: #202722;
+    .send {
+      background: #19d66b;
+      color: #06120a;
+      font-size: 20px;
     }
 
-    @media (max-width: 600px) {
+    .attach {
+      background: transparent;
+      color: #9aa49e;
+      font-size: 20px;
+    }
+
+    .send:disabled {
+      opacity: .45;
+    }
+
+    /* القائمة */
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      right: -310px;
+      width: 300px;
+      height: 100vh;
+      background: #111613;
+      border-left: 1px solid #252d28;
+      z-index: 100;
+      transition: right .25s;
+      padding: 18px;
+      overflow-y: auto;
+    }
+
+    .sidebar.open {
+      right: 0;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .sidebar-title {
+      font-size: 19px;
+      font-weight: bold;
+    }
+
+    .new-chat {
+      width: 100%;
+      padding: 11px;
+      border-radius: 12px;
+      border: 1px solid #19d66b;
+      background: transparent;
+      color: #19d66b;
+      margin-bottom: 15px;
+      cursor: pointer;
+    }
+
+    .conversation {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 7px;
+      background: #171c19;
+      cursor: pointer;
+    }
+
+    .conversation.active {
+      border: 1px solid #19d66b;
+    }
+
+    .conversation-title {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: 14px;
+    }
+
+    .delete-chat {
+      border: 0;
+      background: transparent;
+      color: #777;
+      cursor: pointer;
+    }
+
+    .delete-chat:hover {
+      color: #ff5555;
+    }
+
+    .empty-chats {
+      text-align: center;
+      color: #737d76;
+      padding: 30px 10px;
+      font-size: 13px;
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 90;
+    }
+
+    .overlay.show {
+      display: block;
+    }
+
+    /* نافذة الصور */
+
+    .image-panel {
+      display: none;
+      position: fixed;
+      bottom: 82px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(500px,92%);
+      background: #171c19;
+      border: 1px solid #303a33;
+      border-radius: 18px;
+      padding: 15px;
+      z-index: 30;
+      box-shadow: 0 10px 40px rgba(0,0,0,.5);
+    }
+
+    .image-panel.show {
+      display: block;
+    }
+
+    .image-panel-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .image-panel input {
+      width: 100%;
+      background: #0b0f0d;
+      border: 1px solid #303a33;
+      border-radius: 12px;
+      color: white;
+      padding: 12px;
+      outline: none;
+      margin-bottom: 10px;
+    }
+
+    .generate-button {
+      width: 100%;
+      padding: 12px;
+      border: 0;
+      border-radius: 12px;
+      background: #19d66b;
+      color: #06120a;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    @media(max-width:600px) {
+
       .chat {
         padding-left: 10px;
         padding-right: 10px;
       }
 
-      .welcome {
-        padding-top: 40px;
+      .sidebar {
+        width: 285px;
       }
 
-      .welcome h1 {
-        font-size: 21px;
-      }
     }
+
   </style>
 </head>
 
 <body>
 
-  <div class="app">
+<div class="app">
 
-    <header class="header">
-      <button class="icon-btn" type="button">☰</button>
+  <header class="header">
 
-      <div class="logo">
-        notwin <span>iA</span>
+    <button
+      id="menuButton"
+      class="icon-btn">
+      ☰
+    </button>
+
+    <div class="logo">
+      notwin <span>iA</span>
+    </div>
+
+    <button
+      class="icon-btn">
+      ◉
+    </button>
+
+  </header>
+
+
+  <main
+    id="chat"
+    class="chat">
+
+    <section
+      id="welcome"
+      class="welcome">
+
+      <div class="orb">
+        ✦
       </div>
 
-      <button class="icon-btn" type="button">◉</button>
-    </header>
+      <h1>
+        مرحباً بك في
+        <span>notwin iA</span>
+      </h1>
 
-    <main class="chat" id="chat">
+      <p>
+        مساعدك الذكي للبرمجة، الكتابة، التعلم والأفكار.
+      </p>
 
-      <section class="welcome" id="welcome">
+    </section>
 
-        <div class="orb">✦</div>
+  </main>
+
+
+  <div
+    id="typing"
+    class="typing">
+
+    notwin iA يكتب...
+
+  </div>
+
+
+  <div class="input-wrapper">
+
+    <div class="input-area">
+
+      <button
+        id="imageButton"
+        class="attach"
+        type="button">
+        🖼️
+      </button>
+
+      <input
+        id="messageInput"
+        type="text"
+        placeholder="اكتب رسالتك..."
+        autocomplete="off">
+
+      <button
+        id="sendButton"
+        class="send"
+        type="button">
+        ↑
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- القائمة -->
+
+<div
+  id="overlay"
+  class="overlay">
+</div>
+
+<aside
+  id="sidebar"
+  class="sidebar">
+
+  <div class="sidebar-header">
+
+    <div class="sidebar-title">
+      💬 محادثاتك
+    </div>
+
+    <button
+      id="closeMenu"
+      class="icon-btn">
+      ×
+    </button>
+
+  </div>
+
+  <button
+    id="newChatButton"
+    class="new-chat">
+
+    ＋ محادثة جديدة
+
+  </button>
+
+  <div
+    id="conversationList">
+  </div>
+
+</aside>
+
+
+<!-- لوحة توليد الصور -->
+
+<div
+  id="imagePanel"
+  class="image-panel">
+
+  <div class="image-panel-title">
+    🖼️ توليد صورة
+  </div>
+
+  <input
+    id="imagePrompt"
+    type="text"
+    placeholder="مثلاً: سيارة رياضية سوداء في الليل">
+
+  <button
+    id="generateButton"
+    class="generate-button">
+
+    ✨ توليد الصورة
+
+  </button>
+
+</div>
+
+
+<script>
+
+const API_URL =
+  "https://notwin-ia-1.onrender.com";
+
+const input =
+  document.getElementById(
+    "messageInput"
+  );
+
+const chat =
+  document.getElementById(
+    "chat"
+  );
+
+const typing =
+  document.getElementById(
+    "typing"
+  );
+
+const sendButton =
+  document.getElementById(
+    "sendButton"
+  );
+
+const sidebar =
+  document.getElementById(
+    "sidebar"
+  );
+
+const overlay =
+  document.getElementById(
+    "overlay"
+  );
+
+const conversationList =
+  document.getElementById(
+    "conversationList"
+  );
+
+const imagePanel =
+  document.getElementById(
+    "imagePanel"
+  );
+
+const imagePrompt =
+  document.getElementById(
+    "imagePrompt"
+  );
+
+const generateButton =
+  document.getElementById(
+    "generateButton"
+  );
+
+
+let conversations =
+  JSON.parse(
+    localStorage.getItem(
+      "notwin_conversations"
+    ) || "[]"
+  );
+
+
+let currentConversationId =
+  null;
+
+
+/* حفظ */
+
+function saveConversations() {
+
+  localStorage.setItem(
+    "notwin_conversations",
+    JSON.stringify(
+      conversations
+    )
+  );
+
+}
+
+
+/* عنوان المحادثة */
+
+function getTitle(text) {
+
+  const clean =
+    text
+      .replace(/\s+/g," ")
+      .trim();
+
+  if(clean.length <= 30)
+    return clean;
+
+  return clean.substring(
+    0,
+    30
+  ) + "...";
+
+}
+
+
+/* إنشاء محادثة */
+
+function createConversation() {
+
+  const conversation = {
+
+    id:
+      Date.now().toString(),
+
+    title:
+      "محادثة جديدة",
+
+    messages: []
+
+  };
+
+  conversations.unshift(
+    conversation
+  );
+
+  currentConversationId =
+    conversation.id;
+
+  saveConversations();
+
+  renderConversationList();
+
+  renderConversation();
+
+  return conversation;
+
+}
+
+
+/* الحالية */
+
+function getCurrentConversation() {
+
+  return conversations.find(
+    c =>
+      c.id ===
+      currentConversationId
+  );
+
+}
+
+
+/* إضافة رسالة */
+
+function saveMessage(
+  role,
+  text
+) {
+
+  const conversation =
+    getCurrentConversation();
+
+  if(!conversation)
+    return;
+
+  conversation.messages.push({
+
+    role: role,
+
+    text: text
+
+  });
+
+  if(
+    role === "user" &&
+    conversation.title ===
+    "محادثة جديدة"
+  ) {
+
+    conversation.title =
+      getTitle(text);
+
+  }
+
+  saveConversations();
+
+  renderConversationList();
+
+}
+
+
+/* عرض رسالة */
+
+function addMessageToScreen(
+  role,
+  text
+) {
+
+  const message =
+    document.createElement(
+      "div"
+    );
+
+  message.className =
+    "message " + role;
+
+  const bubble =
+    document.createElement(
+      "div"
+    );
+
+  bubble.className =
+    "bubble";
+
+  bubble.textContent =
+    text;
+
+  message.appendChild(
+    bubble
+  );
+
+  chat.appendChild(
+    message
+  );
+
+}
+
+
+/* صورة */
+
+function addImageToScreen(
+  image
+) {
+
+  const message =
+    document.createElement(
+      "div"
+    );
+
+  message.className =
+    "message ai";
+
+  const container =
+    document.createElement(
+      "div"
+    );
+
+  container.className =
+    "image-message";
+
+  const img =
+    document.createElement(
+      "img"
+    );
+
+  img.className =
+    "generated-image";
+
+  img.src =
+    image;
+
+  container.appendChild(
+    img
+  );
+
+  message.appendChild(
+    container
+  );
+
+  chat.appendChild(
+    message
+  );
+
+}
+
+
+/* عرض المحادثة */
+
+function renderConversation() {
+
+  chat.innerHTML = "";
+
+  const conversation =
+    getCurrentConversation();
+
+  if(
+    !conversation ||
+    conversation.messages.length === 0
+  ) {
+
+    chat.innerHTML = `
+
+      <section class="welcome">
+
+        <div class="orb">
+          ✦
+        </div>
 
         <h1>
-          مرحباً بك في <span>notwin iA</span>
+          مرحباً بك في
+          <span>notwin iA</span>
         </h1>
 
         <p>
@@ -275,241 +845,765 @@
 
       </section>
 
-    </main>
+    `;
 
-    <div class="typing" id="typing">
-      notwin iA يكتب...
-    </div>
+    return;
 
-    <div class="input-wrapper">
+  }
 
-      <div class="input-area">
 
-        <button class="attach" type="button">
-          +
-        </button>
+  conversation.messages.forEach(
+    message => {
 
-        <input
-          id="messageInput"
-          type="text"
-          placeholder="اكتب رسالتك..."
-          autocomplete="off">
+      if(
+        message.role ===
+        "image"
+      ) {
 
-        <button
-          id="sendButton"
-          class="send"
-          type="button">
-          ↑
-        </button>
+        addImageToScreen(
+          message.text
+        );
 
-      </div>
+      } else {
 
-    </div>
+        addMessageToScreen(
+          message.role,
+          message.text
+        );
 
-  </div>
-
-  <script>
-
-    const API_URL =
-      "https://notwin-ia-1.onrender.com/chat";
-
-    const input =
-      document.getElementById("messageInput");
-
-    const chat =
-      document.getElementById("chat");
-
-    const typing =
-      document.getElementById("typing");
-
-    const sendButton =
-      document.getElementById("sendButton");
-
-    const welcome =
-      document.getElementById("welcome");
-
-    function addUserMessage(text) {
-
-      const message =
-        document.createElement("div");
-
-      message.className = "message user";
-
-      const bubble =
-        document.createElement("div");
-
-      bubble.className = "bubble";
-
-      bubble.textContent = text;
-
-      message.appendChild(bubble);
-
-      chat.appendChild(message);
-
-      message.scrollIntoView({
-        behavior: "smooth",
-        block: "end"
-      });
-    }
-
-    function createAIMessage() {
-
-      const message =
-        document.createElement("div");
-
-      message.className = "message ai";
-
-      const bubble =
-        document.createElement("div");
-
-      bubble.className = "bubble";
-
-      message.appendChild(bubble);
-
-      chat.appendChild(message);
-
-      return bubble;
-    }
-
-    async function sendMessage() {
-
-      const text =
-        input.value.trim();
-
-      if (!text) return;
-
-      if (welcome) {
-        welcome.style.display = "none";
       }
 
-      addUserMessage(text);
+    }
+  );
 
-      input.value = "";
-      input.disabled = true;
-      sendButton.disabled = true;
+}
 
-      typing.style.display = "block";
 
-      try {
+/* القائمة */
 
-        const response =
-          await fetch(API_URL, {
+function renderConversationList() {
 
-            method: "POST",
+  conversationList.innerHTML =
+    "";
 
-            headers: {
-              "Content-Type": "application/json"
-            },
+  if(
+    conversations.length === 0
+  ) {
 
-            body: JSON.stringify({
+    conversationList.innerHTML =
+      `<div class="empty-chats">
+        مازال ما عندك حتى محادثة 💚
+      </div>`;
+
+    return;
+
+  }
+
+
+  conversations.forEach(
+    conversation => {
+
+      const item =
+        document.createElement(
+          "div"
+        );
+
+      item.className =
+        "conversation";
+
+      if(
+        conversation.id ===
+        currentConversationId
+      ) {
+
+        item.classList.add(
+          "active"
+        );
+
+      }
+
+
+      const title =
+        document.createElement(
+          "div"
+        );
+
+      title.className =
+        "conversation-title";
+
+      title.textContent =
+        "💬 " +
+        conversation.title;
+
+
+      title.onclick =
+        () => {
+
+          currentConversationId =
+            conversation.id;
+
+          renderConversation();
+
+          renderConversationList();
+
+          closeSidebar();
+
+        };
+
+
+      const del =
+        document.createElement(
+          "button"
+        );
+
+      del.className =
+        "delete-chat";
+
+      del.textContent =
+        "🗑️";
+
+
+      del.onclick =
+        event => {
+
+          event.stopPropagation();
+
+          conversations =
+            conversations.filter(
+              c =>
+                c.id !==
+                conversation.id
+            );
+
+          if(
+            currentConversationId ===
+            conversation.id
+          ) {
+
+            currentConversationId =
+              null;
+
+            renderConversation();
+
+          }
+
+          saveConversations();
+
+          renderConversationList();
+
+        };
+
+
+      item.appendChild(
+        title
+      );
+
+      item.appendChild(
+        del
+      );
+
+      conversationList.appendChild(
+        item
+      );
+
+    }
+  );
+
+}
+
+
+/* إرسال الرسالة */
+
+async function sendMessage() {
+
+  const text =
+    input.value.trim();
+
+  if(!text)
+    return;
+
+
+  if(!currentConversationId)
+    createConversation();
+
+
+  addMessageToScreen(
+    "user",
+    text
+  );
+
+  saveMessage(
+    "user",
+    text
+  );
+
+
+  input.value = "";
+
+  input.disabled = true;
+
+  sendButton.disabled =
+    true;
+
+  typing.style.display =
+    "block";
+
+
+  try {
+
+    const response =
+      await fetch(
+        API_URL + "/chat",
+        {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify({
               message: text
             })
 
-          });
-
-        if (!response.ok) {
-
-          let errorText =
-            "حدث خطأ في السيرفر";
-
-          try {
-
-            const errorData =
-              await response.json();
-
-            errorText =
-              errorData.error || errorText;
-
-          } catch {}
-
-          throw new Error(errorText);
         }
+      );
 
-        if (!response.body) {
-          throw new Error("Streaming غير متاح");
-        }
 
-        typing.style.display = "none";
+    if(!response.ok) {
 
-        const bubble =
-          createAIMessage();
+      let error =
+        "";
 
-        const reader =
-          response.body.getReader();
+      try {
 
-        const decoder =
-          new TextDecoder("utf-8");
+        const data =
+          await response.json();
 
-        let fullText = "";
+        error =
+          data.error || "";
 
-        while (true) {
+      } catch {}
 
-          const {
-            value,
-            done
-          } = await reader.read();
 
-          if (done) break;
+      if(
+        response.status ===
+        429
+      ) {
 
-          const chunk =
-            decoder.decode(value, {
-              stream: true
-            });
-
-          fullText += chunk;
-
-          bubble.textContent =
-            fullText;
-
-          bubble.parentElement.scrollIntoView({
-            behavior: "smooth",
-            block: "end"
-          });
-        }
-
-      } catch (error) {
-
-        console.error(error);
-
-        typing.style.display = "none";
-
-        const bubble =
-          createAIMessage();
-
-        bubble.textContent =
-          "صار خطأ في الاتصال بالسيرفر 😕";
-
-      } finally {
-
-        input.disabled = false;
-        sendButton.disabled = false;
-        input.focus();
+        throw new Error(
+          "DAILY_LIMIT"
+        );
 
       }
+
+
+      throw new Error(
+        error ||
+        "SERVER_ERROR"
+      );
+
     }
 
-    sendButton.addEventListener(
-      "click",
-      sendMessage
+
+    if(!response.body)
+      throw new Error(
+        "NO_STREAM"
+      );
+
+
+    typing.style.display =
+      "none";
+
+
+    const message =
+      document.createElement(
+        "div"
+      );
+
+    message.className =
+      "message ai";
+
+
+    const bubble =
+      document.createElement(
+        "div"
+      );
+
+    bubble.className =
+      "bubble";
+
+
+    message.appendChild(
+      bubble
     );
 
-    input.addEventListener(
-      "keydown",
-      function(event) {
+    chat.appendChild(
+      message
+    );
 
-        if (event.key === "Enter") {
 
-          event.preventDefault();
+    const reader =
+      response.body.getReader();
 
-          sendMessage();
+    const decoder =
+      new TextDecoder(
+        "utf-8"
+      );
+
+    let fullText =
+      "";
+
+
+    while(true) {
+
+      const {
+        value,
+        done
+      } =
+        await reader.read();
+
+      if(done)
+        break;
+
+
+      const chunk =
+        decoder.decode(
+          value,
+          {
+            stream:true
+          }
+        );
+
+      fullText +=
+        chunk;
+
+      bubble.textContent =
+        fullText;
+
+    }
+
+
+    if(fullText.trim()) {
+
+      saveMessage(
+        "ai",
+        fullText
+      );
+
+    }
+
+
+  } catch(error) {
+
+    typing.style.display =
+      "none";
+
+
+    const bubble =
+      createErrorBubble();
+
+
+    if(
+      error.message ===
+      "DAILY_LIMIT"
+    ) {
+
+      bubble.textContent =
+        "⏳ وصلت للحد الأقصى من المحاولات المجانية اليوم 😴💕\nارجع غدًا ونكملو من وين حبستنا.";
+
+    } else {
+
+      bubble.textContent =
+        "⚙️ صار مشكل في الاتصال بالخدمة.\nعاود المحاولة بعد شوية 😕";
+
+    }
+
+  } finally {
+
+    input.disabled =
+      false;
+
+    sendButton.disabled =
+      false;
+
+    input.focus();
+
+  }
+
+}
+
+
+/* رسالة خطأ */
+
+function createErrorBubble() {
+
+  const message =
+    document.createElement(
+      "div"
+    );
+
+  message.className =
+    "message ai";
+
+
+  const bubble =
+    document.createElement(
+      "div"
+    );
+
+  bubble.className =
+    "bubble";
+
+
+  message.appendChild(
+    bubble
+  );
+
+  chat.appendChild(
+    message
+  );
+
+
+  return bubble;
+
+}
+
+
+/* توليد صورة */
+
+async function generateImage() {
+
+  const prompt =
+    imagePrompt.value.trim();
+
+  if(!prompt)
+    return;
+
+
+  if(!currentConversationId)
+    createConversation();
+
+
+  imagePanel.classList.remove(
+    "show"
+  );
+
+
+  typing.textContent =
+    "notwin iA يحضر الصورة... 🖼️";
+
+
+  typing.style.display =
+    "block";
+
+
+  generateButton.disabled =
+    true;
+
+
+  try {
+
+    const response =
+      await fetch(
+        API_URL +
+        "/generate-image",
+        {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify({
+              prompt: prompt
+            })
 
         }
+      );
+
+
+    let data = {};
+
+    try {
+
+      data =
+        await response.json();
+
+    } catch {}
+
+
+    if(!response.ok) {
+
+      if(
+        response.status ===
+        429
+      ) {
+
+        throw new Error(
+          "DAILY_LIMIT"
+        );
 
       }
+
+      throw new Error(
+        data.error ||
+        "IMAGE_ERROR"
+      );
+
+    }
+
+
+    if(
+      !data.image
+    ) {
+
+      throw new Error(
+        "NO_IMAGE"
+      );
+
+    }
+
+
+    const imageUrl =
+      "data:" +
+      data.mimeType +
+      ";base64," +
+      data.image;
+
+
+    addImageToScreen(
+      imageUrl
     );
 
-  </script>
+
+    const conversation =
+      getCurrentConversation();
+
+
+    conversation.messages.push({
+
+      role:
+        "image",
+
+      text:
+        imageUrl
+
+    });
+
+
+    if(
+      conversation.title ===
+      "محادثة جديدة"
+    ) {
+
+      conversation.title =
+        getTitle(prompt);
+
+    }
+
+
+    saveConversations();
+
+    renderConversationList();
+
+
+  } catch(error) {
+
+    const bubble =
+      createErrorBubble();
+
+
+    if(
+      error.message ===
+      "DAILY_LIMIT"
+    ) {
+
+      bubble.textContent =
+        "🖼️⏳ وصلت للحد المجاني لتوليد الصور اليوم 😴💕\nارجع غدًا ونكملو.";
+
+    } else {
+
+      bubble.textContent =
+        "🖼️❌ ما قدرناش نولد الصورة حالياً.\nعاود المحاولة بعد شوية.";
+
+    }
+
+  } finally {
+
+    typing.style.display =
+      "none";
+
+    typing.textContent =
+      "notwin iA يكتب...";
+
+    generateButton.disabled =
+      false;
+
+    imagePrompt.value = "";
+
+  }
+
+}
+
+
+/* فتح لوحة الصور */
+
+document
+  .getElementById(
+    "imageButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      imagePanel.classList.toggle(
+        "show"
+      );
+
+      if(
+        imagePanel.classList.contains(
+          "show"
+        )
+      ) {
+
+        imagePrompt.focus();
+
+      }
+
+    }
+  );
+
+
+/* توليد */
+
+generateButton.addEventListener(
+  "click",
+  generateImage
+);
+
+
+imagePrompt.addEventListener(
+  "keydown",
+  event => {
+
+    if(
+      event.key ===
+      "Enter"
+    ) {
+
+      event.preventDefault();
+
+      generateImage();
+
+    }
+
+  }
+);
+
+
+/* القائمة */
+
+document
+  .getElementById(
+    "menuButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      sidebar.classList.add(
+        "open"
+      );
+
+      overlay.classList.add(
+        "show"
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "closeMenu"
+  )
+  .addEventListener(
+    "click",
+    closeSidebar
+  );
+
+
+overlay.addEventListener(
+  "click",
+  closeSidebar
+);
+
+
+function closeSidebar() {
+
+  sidebar.classList.remove(
+    "open"
+  );
+
+  overlay.classList.remove(
+    "show"
+  );
+
+}
+
+
+/* محادثة جديدة */
+
+document
+  .getElementById(
+    "newChatButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      createConversation();
+
+      closeSidebar();
+
+      input.focus();
+
+    }
+  );
+
+
+/* Enter */
+
+input.addEventListener(
+  "keydown",
+  event => {
+
+    if(
+      event.key ===
+      "Enter"
+    ) {
+
+      event.preventDefault();
+
+      sendMessage();
+
+    }
+
+  }
+);
+
+
+/* البداية */
+
+renderConversationList();
+
+</script>
 
 </body>
-
-</html>
+  </html>
