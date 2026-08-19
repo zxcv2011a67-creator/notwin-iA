@@ -1,21 +1,17 @@
 const express = require("express");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
 
 app.use(express.json({ limit: "10mb" }));
 
-// ===============================
+// ========================================
 // CORS
-// ===============================
+// ========================================
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Content-Type");
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET, POST, OPTIONS"
-  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
 
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
@@ -25,256 +21,178 @@ app.use((req, res, next) => {
 });
 
 
-// ===============================
-// Gemini
-// ===============================
+// ========================================
+// الإعدادات
+// ========================================
 
-const apiKey = process.env.GEMINI_API_KEY;
+const PORT = process.env.PORT || 3000;
 
-if (!apiKey) {
-  console.error("GEMINI_API_KEY is missing");
-}
-
-const genAI = apiKey
-  ? new GoogleGenerativeAI(apiKey)
-  : null;
+const GEMINI_API_KEY =
+  process.env.GEMINI_API_KEY;
 
 
-// ===============================
-// إعدادات النماذج
-// ===============================
+// ========================================
+// API الشات الجديد
+// ========================================
 
-const CHAT_MODEL = "gemini-3.6-flash";
-
-// Nano Banana 2
-const IMAGE_MODEL = "gemini-3.1-flash-image-preview";
+const CHAT_API =
+  "https://norch-project.gleeze.com/api/gemini/2.5/flash-lite";
 
 
-// ===============================
+// ========================================
 // شخصية notwin iA
-// ===============================
+// ========================================
 
 const SYSTEM_PROMPT = `
 أنت notwin iA، المساعد الذكي الرسمي داخل تطبيق notwin iA.
 
 مطورك:
-👑 إبراهيم محور الكون 🌍🔥💚
+إبراهيم محور الكون 👑🌍🔥💚
 
 إذا سألك المستخدم:
-"شكون مطورك؟"
-أو:
-"من مطورك؟"
-أو:
-"من صنعك؟"
-أو أي سؤال مشابه عن المطور:
+شكون مطورك؟
+من مطورك؟
+شكون دارك؟
+من صنعك؟
+أو أي سؤال مشابه عن المطور، أجب:
 
-أجب حرفياً:
-"مطوري هو إبراهيم محور الكون 👑🌍🔥💚"
+مطوري هو إبراهيم محور الكون 👑🌍🔥💚
 
-إذا سألك:
-"شكون نتا؟"
+إذا سألك المستخدم:
+شكون نتا؟
+من أنت؟
 أجب:
-"أنا notwin iA 🤖💚"
 
-جاوب دائماً بلغة المستخدم.
+أنا notwin iA، مساعدك الذكي.
 
-إذا كان المستخدم يهدر بالدزيرية،
-جاوب بالدزيرية بشكل طبيعي.
+جاوب دائمًا بلغة المستخدم.
 
-كن واضحاً ومفيداً.
+إذا كان المستخدم يهدر بالدزيرية، جاوبو بالدزيرية بشكل طبيعي.
 
-إذا لم تعرف الإجابة، قل ذلك بصراحة.
-لا تخترع معلومات.
+إذا كان السؤال بسيطًا، جاوب باختصار.
 
-لا تدّعي أنك شخص حقيقي.
+إذا لم تعرف الإجابة، قل إنك لا تعرف بدل اختراع معلومات.
+
+كن واضحًا ومفيدًا ومحترمًا.
 `;
 
 
-// ===============================
-// أدوات مساعدة
-// ===============================
+// ========================================
+// بناء السؤال
+// ========================================
 
-function wait(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function buildPrompt(message) {
+
+  return `${SYSTEM_PROMPT}
+
+رسالة المستخدم:
+${message}
+
+أجب المستخدم مباشرة بدون شرح للتعليمات.`;
+
 }
 
-function isTemporaryError(error) {
-  return (
-    error?.status === 500 ||
-    error?.status === 502 ||
-    error?.status === 503 ||
-    error?.status === 504
-  );
-}
 
-
-// ===============================
+// ========================================
 // CHAT
-// ===============================
-
-async function createChatStream(message) {
-
-  if (!genAI) {
-    throw new Error("GEMINI_API_KEY_MISSING");
-  }
-
-  const model = genAI.getGenerativeModel({
-    model: CHAT_MODEL
-  });
-
-  const result =
-    await model.generateContentStream(
-      `${SYSTEM_PROMPT}
-
-المستخدم:
-${message}`
-    );
-
-  return result.stream;
-}
-
-
-// ===============================
-// الصفحة الرئيسية
-// ===============================
-
-app.get("/", (req, res) => {
-
-  res.json({
-    status: "online",
-    app: "notwin iA",
-    developer:
-      "إبراهيم محور الكون 👑🌍🔥💚"
-  });
-
-});
-
-
-// ===============================
-// Health
-// ===============================
-
-app.get("/health", (req, res) => {
-
-  res.json({
-    status: "ok",
-    gemini:
-      apiKey
-        ? "configured"
-        : "missing",
-    chatModel: CHAT_MODEL,
-    imageModel: IMAGE_MODEL
-  });
-
-});
-
-
-// ===============================
-// CHAT API
-// ===============================
+// ========================================
 
 app.post("/chat", async (req, res) => {
 
-  if (!genAI) {
+  const message = req.body?.message;
 
-    return res.status(500).json({
-      error:
-        "مفتاح Gemini غير موجود في السيرفر."
-    });
-
-  }
-
-  const message =
-    req.body?.message;
-
+  // التحقق من الرسالة
   if (
     typeof message !== "string" ||
     !message.trim()
   ) {
 
     return res.status(400).json({
-      error:
-        "الرسالة فارغة."
+      error: "الرسالة فارغة."
     });
 
   }
 
-  let stream;
+
+  const finalPrompt =
+    buildPrompt(message.trim());
+
 
   try {
 
-    stream =
-      await createChatStream(
-        message.trim()
-      );
+    const apiUrl =
+      `${CHAT_API}?prompt=${encodeURIComponent(finalPrompt)}`;
 
-  } catch (error) {
 
-    console.error(
-      "Chat attempt 1:",
-      error?.message
-    );
-
-    // الحد المجاني
-    if (error?.status === 429) {
-
-      return res.status(429).json({
-        error:
-          "وصلت للحد الأقصى من المحاولات المجانية اليوم."
+    const response =
+      await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json"
+        }
       });
 
-    }
 
-    if (!isTemporaryError(error)) {
-
-      return res.status(500).json({
-        error:
-          "تعذر الاتصال بـ Gemini حالياً 😕"
-      });
-
-    }
-
-    await wait(1500);
+    let data = {};
 
     try {
 
-      stream =
-        await createChatStream(
-          message.trim()
-        );
+      data = await response.json();
 
-    } catch (error2) {
+    } catch (error) {
 
       console.error(
-        "Chat attempt 2:",
-        error2?.message
+        "Invalid JSON from chat API:",
+        error
       );
 
-      if (error2?.status === 429) {
+    }
 
-        return res.status(429).json({
-          error:
-            "وصلت للحد الأقصى من المحاولات المجانية اليوم."
-        });
 
-      }
+    // API رجع خطأ
+    if (!response.ok) {
 
-      return res.status(503).json({
+      console.error(
+        "Chat API error:",
+        response.status,
+        data
+      );
+
+      return res.status(502).json({
         error:
-          "Gemini مشغول حالياً، عاود بعد لحظات 😕"
+          "خدمة الذكاء الاصطناعي غير متاحة حاليًا، عاود بعد شوية 😕"
       });
 
     }
 
-  }
+
+    // استخراج الرد
+    const answer =
+      data?.response ||
+      data?.answer ||
+      data?.text;
 
 
-  // ===============================
-  // Streaming
-  // ===============================
+    if (
+      typeof answer !== "string" ||
+      !answer.trim()
+    ) {
 
-  try {
+      console.error(
+        "Empty AI response:",
+        data
+      );
 
+      return res.status(502).json({
+        error:
+          "الذكاء الاصطناعي ما رجعش رد حاليًا 😕"
+      });
+
+    }
+
+
+    // نفس النظام القديم:
+    // الواجهة تستقبل نص عادي
     res.status(200);
 
     res.setHeader(
@@ -287,69 +205,47 @@ app.post("/chat", async (req, res) => {
       "no-cache"
     );
 
-    res.setHeader(
-      "X-Accel-Buffering",
-      "no"
-    );
+    res.send(answer.trim());
 
-    for await (
-      const chunk of stream
-    ) {
-
-      const text =
-        chunk.text();
-
-      if (text) {
-        res.write(text);
-      }
-
-    }
-
-    res.end();
 
   } catch (error) {
 
     console.error(
-      "Chat streaming error:",
+      "Chat API connection error:",
       error
     );
 
-    if (!res.headersSent) {
-
-      return res.status(500).json({
-        error:
-          "صار خطأ أثناء استقبال الرد 😕"
-      });
-
-    }
-
-    res.end();
+    return res.status(503).json({
+      error:
+        "تعذر الاتصال بخدمة الذكاء الاصطناعي 😕\nعاود المحاولة بعد شوية."
+    });
 
   }
 
 });
 
 
-// ===============================
-// توليد الصور
-// Nano Banana 2
-// ===============================
+// ========================================
+// توليد الصور بواسطة Gemini
+// ========================================
 
 app.post(
   "/generate-image",
   async (req, res) => {
 
-    if (!apiKey) {
+    if (!GEMINI_API_KEY) {
 
       return res.status(500).json({
         error:
-          "مفتاح Gemini غير موجود في السيرفر."
+          "مفتاح Gemini غير موجود في Render."
       });
 
     }
 
+
     const prompt =
       req.body?.prompt;
+
 
     if (
       typeof prompt !== "string" ||
@@ -366,15 +262,22 @@ app.post(
 
     try {
 
+      const imageApiUrl =
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-image:generateContent";
+
+
       const response =
         await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${IMAGE_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`,
+          imageApiUrl,
           {
             method: "POST",
 
             headers: {
               "Content-Type":
-                "application/json"
+                "application/json",
+
+              "x-goog-api-key":
+                GEMINI_API_KEY
             },
 
             body: JSON.stringify({
@@ -391,89 +294,65 @@ app.post(
               ],
 
               generationConfig: {
-
-                responseModalities: [
-                  "IMAGE"
-                ]
-
+                responseModalities:
+                  ["IMAGE"]
               }
 
             })
-
           }
         );
 
 
-      // ===============================
-      // Rate limit
-      // ===============================
+      let data = {};
 
-      if (response.status === 429) {
+      try {
+
+        data =
+          await response.json();
+
+      } catch (error) {
+
+        console.error(
+          "Invalid image API response:",
+          error
+        );
+
+      }
+
+
+      // حد Gemini
+      if (
+        response.status === 429
+      ) {
 
         return res.status(429).json({
           error:
-            "وصلت للحد المجاني لتوليد الصور اليوم 😴💕"
+            "وصلت للحد المجاني لتوليد الصور حاليًا 😴💕"
         });
 
       }
 
-
-      // ===============================
-      // Server errors
-      // ===============================
-
-      if (
-        response.status === 500 ||
-        response.status === 502 ||
-        response.status === 503 ||
-        response.status === 504
-      ) {
-
-        return res.status(503).json({
-          error:
-            "خدمة توليد الصور مشغولة حالياً، عاود بعد شوية 😕"
-        });
-
-      }
-
-
-      // ===============================
-      // أي خطأ آخر
-      // ===============================
 
       if (!response.ok) {
 
-        let errorData = {};
-
-        try {
-          errorData =
-            await response.json();
-        } catch {}
-
         console.error(
-          "Image API error:",
-          errorData
+          "Gemini image error:",
+          response.status,
+          data
         );
 
-        return res.status(500).json({
+        return res.status(
+          response.status
+        ).json({
           error:
-            "ما قدرناش نولد الصورة حالياً."
+            "ما قدرناش نولد الصورة حاليًا 😕"
         });
 
       }
 
 
-      // ===============================
-      // قراءة النتيجة
-      // ===============================
-
-      const data =
-        await response.json();
-
-
       const parts =
-        data?.candidates?.[0]
-          ?.content?.parts || [];
+        data?.candidates?.[0]?.content?.parts || [];
 
 
       const imagePart =
@@ -485,11 +364,6 @@ app.post(
 
 
       if (!imagePart) {
-
-        console.error(
-          "No image part:",
-          JSON.stringify(data)
-        );
 
         return res.status(500).json({
           error:
@@ -504,16 +378,6 @@ app.post(
         imagePart.inline_data;
 
 
-      if (!imageData?.data) {
-
-        return res.status(500).json({
-          error:
-            "بيانات الصورة ناقصة."
-        });
-
-      }
-
-
       return res.json({
 
         success: true,
@@ -521,7 +385,7 @@ app.post(
         mimeType:
           imageData.mimeType ||
           imageData.mime_type ||
-          "image/jpeg",
+          "image/png",
 
         image:
           imageData.data
@@ -547,12 +411,59 @@ app.post(
 );
 
 
-// ===============================
-// تشغيل السيرفر
-// ===============================
+// ========================================
+// الصفحة الرئيسية
+// ========================================
 
-const PORT =
-  process.env.PORT || 3000;
+app.get("/", (req, res) => {
+
+  res.json({
+
+    status: "online",
+
+    app: "notwin iA",
+
+    chat: "norch-project Gemini 2.5 Flash Lite",
+
+    images:
+      GEMINI_API_KEY
+        ? "Gemini configured"
+        : "Gemini key missing",
+
+    developer:
+      "إبراهيم محور الكون 👑🌍🔥💚"
+
+  });
+
+});
+
+
+// ========================================
+// Health
+// ========================================
+
+app.get("/health", (req, res) => {
+
+  res.json({
+
+    status: "ok",
+
+    chat:
+      "configured",
+
+    geminiImages:
+      GEMINI_API_KEY
+        ? "configured"
+        : "missing"
+
+  });
+
+});
+
+
+// ========================================
+// تشغيل السيرفر
+// ========================================
 
 app.listen(
   PORT,
