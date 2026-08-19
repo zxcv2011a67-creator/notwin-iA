@@ -5,7 +5,6 @@ const app = express();
 
 app.use(express.json({ limit: "1mb" }));
 
-// السماح للتطبيق بالاتصال بالسيرفر
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
@@ -30,10 +29,15 @@ if (!apiKey) {
   console.error("GEMINI_API_KEY is missing");
 }
 
+const genAI = apiKey
+  ? new GoogleGenerativeAI(apiKey)
+  : null;
+
 app.get("/", (req, res) => {
   res.json({
     status: "online",
-    app: "notwin iA"
+    app: "notwin iA",
+    developer: "إبراهيم"
   });
 });
 
@@ -46,7 +50,7 @@ app.get("/health", (req, res) => {
 
 app.post("/chat", async (req, res) => {
   try {
-    if (!apiKey) {
+    if (!genAI) {
       return res.status(500).json({
         error: "GEMINI_API_KEY غير موجود"
       });
@@ -60,13 +64,32 @@ app.post("/chat", async (req, res) => {
       });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-
     const model = genAI.getGenerativeModel({
       model: "gemini-3.6-flash"
     });
 
-    const result = await model.generateContent(message.trim());
+    const systemInstruction = `
+أنت المساعد الذكي الرسمي لتطبيق اسمه "notwin iA".
+
+معلومات ثابتة عنك:
+- اسمك: notwin iA
+- مطورك: إبراهيم
+- أنت جزء من تطبيق notwin iA.
+- إذا سألك المستخدم "شكون مطورك؟" أو "من مطورك؟" أو سؤال مشابه، أجب بوضوح:
+  "مطوري هو إبراهيم 👨‍💻، وأنا notwin iA."
+- إذا سألك المستخدم "شكون نتا؟"، قل إنك notwin iA.
+- تحدث مع المستخدم باللغة التي يستعملها.
+- إذا تحدث معك بالدزيرية، جاوبه بالدزيرية بشكل طبيعي.
+- لا تدّعي أنك تطبيق آخر.
+- لا تغيّر اسم المطور من إبراهيم.
+`;
+
+    const prompt = `${systemInstruction}
+
+رسالة المستخدم:
+${message.trim()}`;
+
+    const result = await model.generateContent(prompt);
 
     const response = await result.response;
     const reply = response.text();
@@ -82,7 +105,7 @@ app.post("/chat", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Gemini error:", error);
+    console.error("❌ Gemini error:", error);
 
     return res.status(500).json({
       error: "حدث خطأ أثناء الاتصال بـ Gemini",
