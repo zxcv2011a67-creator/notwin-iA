@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "echo Web app ready"
+    "build": "mkdir -p www && cp index.html www/index.html"
   },
   "dependencies": {
     "@capacitor/core": "6.2.1",
